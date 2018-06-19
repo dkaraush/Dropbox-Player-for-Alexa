@@ -1,0 +1,26 @@
+{
+  "name": "dropbox-amazon-player",
+  "version": "1.0.0",
+  "description": "An alexa skill, which can play music from dropbox",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/dkaraush/Dropbox-Amazon-Player.git"
+  },
+  "keywords": [
+    "dropbox",
+    "alexa",
+    "amazon",
+    "echo",
+    "nodejs"
+  ],
+  "author": "dkaraush@gmail.com",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/dkaraush/Dropbox-Amazon-Player/issues"
+  },
+  "homepage": "https://github.com/dkaraush/Dropbox-Amazon-Player#readme"
+}
