@@ -9,15 +9,20 @@ require("colors");
 
 // own files
 require("./utils.js");
+require("./dropbox-client.js");
 var lambda = require("./skill.js");
-var connected_page = fs.readFileSync("connected.html");
+var connected_page = fs.readFileSync("html/connected.html");
+var connecting_page = fs.readFileSync("html/connecting.html");
 
-global.tokens = loadJSONFile("tokens.json", {}, false);
-var config = loadJSONFile("config.json", {dropbox_app_key: "<your app key>", http_port: 8032, server_url: null}, true);
+global.CONFIG_FILE = "config.json";
+global.TOKENS_FILE = "tokens.json";
+
+var config = loadJSONFile(CONFIG_FILE, {dropbox_app_key: "<your app key>", dropbox_app_secret: "<your app secret>", http_port: 8032, server_url: null}, true);
+global.tokens = loadJSONFile(TOKENS_FILE, {}, false);
 
 global.qrcode_api_url = "https://api.qrserver.com/v1/create-qr-code/?size={SIZE}&data={DATA}";
-global.dropbox_oauth_url = "https://www.dropbox.com/1/oauth2/authorize?client_id={APP_KEY}&response_type=code&redirect_uri={REDIRECT_URI}&state={USER_ID}";
 global.dropbox_app_key = config.dropbox_app_key;
+global.dropbox_app_secret = config.dropbox_app_secret;
 
 global.redirects = {};
 global.serverURL = null;
@@ -45,12 +50,16 @@ async function start() {
 				res.statusCode = 200;
 				res.setHeader("Content-Type", "text/html");
 				res.end("<html><body><h2>Your redirect url is timed out.</h2></body></html>");
+				delete redirects[url];
 				return;
 			}
 			res.statusCode = 302;
+			res.setHeader("Set-Cookie", "userid=" + redirects[url].userid);
 			res.setHeader("Location", redirects[url].to);
 			res.end();
 			return;
+		} else if (url.split("/")[1] == "tracks") {
+			fs.createReadStream("." + url).pipe(res);
 		} else if (url == "/alexa/") {
 			var chunks = [];
 			req.on('data', chunk => chunks.push(chunk));
@@ -73,12 +82,7 @@ async function start() {
 					res.end('{error: "error"}');
 				  });
 			});
-		} else {
-			if (url.indexOf("?")<=0) {
-				res.statusCode = 404;
-				res.end();
-				return;
-			}
+		} else if (url.indexOf("?")>=0 && url.substring(0, url.indexOf("?")) == "/connected/") {
 			var raw_query = url.substring(url.indexOf("?")+1);
 			var query = parseQuery(raw_query);
 
@@ -88,11 +92,15 @@ async function start() {
 				return;
 			}
 
-			global.tokens[query.state] = query.code;
-			saveJSONFile("tokens.json", global.tokens);
+			global.tokens[query.state] = query;
+			saveJSONFile(TOKENS_FILE, global.tokens);
 			res.statusCode = 200;
 			res.setHeader("Content-Type", "text/html");
 			res.end(connected_page);
+		} else {
+			res.statusCode = 200;
+			res.setHeader("Content-Type", "text/html");
+			res.end(connecting_page);
 		}
 	});
 
