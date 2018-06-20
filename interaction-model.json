@@ -1,0 +1,99 @@
+{
+    "interactionModel": {
+        "languageModel": {
+            "invocationName": "dropbox player",
+            "intents": [
+                {
+                    "name": "AMAZON.FallbackIntent",
+                    "samples": []
+                },
+                {
+                    "name": "AMAZON.CancelIntent",
+                    "samples": []
+                },
+                {
+                    "name": "AMAZON.HelpIntent",
+                    "samples": []
+                },
+                {
+                    "name": "AMAZON.StopIntent",
+                    "samples": []
+                },
+                {
+                    "name": "AMAZON.PauseIntent",
+                    "samples": []
+                },
+                {
+                    "name": "AMAZON.ResumeIntent",
+                    "samples": []
+                },
+                {
+                    "name": "SearchIntent",
+                    "slots": [
+                        {
+                            "name": "query",
+                            "type": "AMAZON.SearchQuery"
+                        }
+                    ],
+                    "samples": [
+                        "play {query}",
+                        "search {query}",
+                        "find {query}",
+                        "find {query} and play it",
+                        "play {query} tracks",
+                        "play {query} files",
+                        "search for {query}"
+                    ]
+                },
+                {
+                    "name": "AcceptIntent",
+                    "slots": [],
+                    "samples": [
+                        "play",
+                        "alright",
+                        "yep",
+                        "of course",
+                        "ok",
+                        "yes"
+                    ]
+                },
+                {
+                    "name": "RefuseIntent",
+                    "slots": [],
+                    "samples": [
+                        "definetly no",
+                        "no thanks",
+                        "nope",
+                        "no"
+                    ]
+                },
+                {
+                    "name": "ForgetAccountIntent",
+                    "slots": [],
+                    "samples": [
+                        "forget my account",
+                        "forget my dropbox account",
+                        "forget my dropbox",
+                        "forget dropbox",
+                        "forget account",
+                        "disconnect account",
+                        "disconnect dropbox account",
+                        "disconnect my dropbox",
+                        "disconnect my dropbox account",
+                        "disconnect my account"
+                    ]
+                },
+                {
+                    "name": "StopIntent",
+                    "slots": [],
+                    "samples": [
+                        "pause",
+                        "please stop",
+                        "stop"
+                    ]
+                }
+            ],
+            "types": []
+        }
+    }
+}
