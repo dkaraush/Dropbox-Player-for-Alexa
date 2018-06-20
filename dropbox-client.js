@@ -27,30 +27,6 @@ global.dropbox_search = async function (accessToken, query) {
 	});
 }
 
-global.dropbox_download = async function (accessToken, path) {
-	if (!fs.existsSync("./tracks/"))
-		fs.mkdir("./tracks/");
-	var ext = path.substring(path.indexOf(".")+1);
-	var filename = randomString(32)+"."+ext;
-	return new Promise((resolve, reject) => {
-		dropboxV2Api.authenticate({token: accessToken})({
-			resource: 'files/download',
-			parameters: {
-				path: path
-			}
-		}, (err, result, response) => {
-			if (err) {
-				console.log("dropbox-client.js dropbox_download")
-				console.log(err);
-				reject(err);
-			}
-		}).pipe(fs.createWriteStream("./tracks/"+filename));
-		setTimeout(function () {
-			resolve(filename);
-		}, 500);
-	});
-}
-
 global.dropbox_download_link = async function (accessToken, path) {
 	var ext = path.substring(path.indexOf(".")+1);
 	var filename = randomString(32)+"."+ext;
@@ -90,10 +66,4 @@ global.dropbox_download_link = async function (accessToken, path) {
 			}
 		})
 	});
-} 
-
-if (fs.existsSync("/tracks/")) {
-	var files = fs.readdirSync("/tracks");
-	for (var i = 0; i < files.length; ++i)
-		fs.unlinkSync("/tracks/"+files[i]);
 }
