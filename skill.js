@@ -27,7 +27,7 @@ exports.requestHandlers = [
 					 .reprompt()
 					 .getResponse();
 		} else {
-			handlerInput.attributesManager.setSessionAttributes({query: query, files: Array.from(files, o => o.metadata.path_display), from: "SearchIntent"});
+			handlerInput.attributesManager.setSessionAttributes({query: query, files: Array.from(files, o => o.metadata.path_display), playingIndex: 0, from: "SearchIntent"});
 			return res.speak(`There ${(files.length==1?"is":"are")} ${files.length} file${files.length==1?"":"s"}. Play ${files.length==1?"it":"them"}?`)
 					  .reprompt(`Play ${files.length==1?"it":"them"}?`)
 					  .getResponse();
@@ -45,13 +45,11 @@ exports.requestHandlers = [
 
 		if (from == "SearchIntent") {
 			var files = attributes.files;
-			var downloaded = [];
-			for (var i = 0; i < files.length; ++i)
-				downloaded[i] = await dropbox_download(tokens[userid].access_token, files[i]);
 			
-			handlerInput.attributesManager.setSessionAttributes({downloadedFiles: downloaded, files: files, playingIndex: 0, offset: 0});
+			var link = await dropbox_download_link(tokens[userid].access_token, attributes.files[attributes.playingIndex]);
+			handlerInput.attributesManager.setSessionAttributes({currentLink: link, files: files, playingIndex: 0, offset: 0});
 			return res.speak("Playing \""+attributes.query+"\" file"+(files.length==1?"":"s")+"...")
-					.addAudioPlayerPlayDirective('REPLACE_ALL', serverURL + "/tracks/" + downloaded[0], files[0], 0)
+					.addAudioPlayerPlayDirective('REPLACE_ALL', link, files[0], 0)
 					.getResponse();
 		}
 		
@@ -81,10 +79,14 @@ exports.requestHandlers = [
 },
 {
 	name: "AMAZON.PauseIntent",
-	_handle(handlerInput, userid, slots, res) {
+	_handle: async function(handlerInput, userid, slots, res) {
+		console.log("paused");
 		console.dir(handlerInput.requestEnvelope);
 		var attributes = handlerInput.attributesManager.getSessionAttributes();
-		
+		if (!attributes.currentLink) {
+			var link = await dropbox_download_link(tokens[userid].access_token, attributes.files[attributes.playingIndex]);
+			attributes.currentLink = link;
+		}
 		handlerInput.attributesManager.setSessionAttributes(attributes);
 		return res.speak("Paused.").addAudioPlayerStopDirective().getResponse();
 	}
@@ -97,7 +99,7 @@ exports.requestHandlers = [
 		
 		handlerInput.attributesManager.setSessionAttributes(attributes);
 		return res.speak("Resumed.")
-		          .addAudioPlayerPlayDirective('REPLACE_ALL', serverURL + "/tracks/" + attributes.downloadedFiles[attributes.playingIndex], attributes.files[attributes.playingIndex], attributes.offset)
+		          .addAudioPlayerPlayDirective('REPLACE_ALL', attributes.currentLink, attributes.files[attributes.playingIndex], attributes.offset)
 		          .getResponse();
 	}
 },
@@ -111,15 +113,16 @@ exports.requestHandlers = [
 },
 {
 	name: "AudioPlayer.PlaybackFinished",
-	_handle(handlerInput, userid, slots, res) {
+	_handle: async function(handlerInput, userid, slots, res) {
 		var attributes = handlerInput.attributes.getSessionAttributes();
 		attributes.playingIndex++;
 		attributes.offset = 0;
 		if (attributes.playingIndex == attributes.downloaded.length)
 			return res.speak("File"+(attributes.downloaded.length==1?"":"s")+" ended.");
 		handlerInput.attributesManager.setSessionAttributes(attributes);
-		return res.addAudioPlayerPlayDirective('REPLACE_ENQUEUED', serverURL + "/tracks/" + attributes.downloaded[attributes.playingIndex], attributes.files[attributes.playingIndex], attributes.offset)
-			.getResponse();
+		var link = await dropbox_download_link(tokens[userid].access_token, attributes.files[attributes.playingIndex]);
+		return res.addAudioPlayerPlayDirective('REPLACE_ENQUEUED', link, attributes.files[attributes.playingIndex].substring(1), attributes.offset)
+				 .getResponse();
 	}
 },
 {

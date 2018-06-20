@@ -61,8 +61,8 @@ global.dropbox_download_link = async function (accessToken, path) {
 			parameters: {
 				path: path,
 				settings: {
-					requested_visibility: "public",
-					expires: (new Date(Date.now() + 3600000)).toISOString().replace(/\.\d+Z$/g,"Z") // + 1 hour
+					requested_visibility: "public"
+					//expires: (new Date(Date.now() + 3600000)).toISOString().replace(/\.\d+Z$/g,"Z") // + 1 hour
 				}
 			}
 		}, (err, result, response) => {
@@ -74,11 +74,17 @@ global.dropbox_download_link = async function (accessToken, path) {
 							path: path
 						}
 					}, (err, result, response) => {
-						resolve(result.links[0].url);
+						if (err) {
+							console.log(err);
+							throw err;
+							reject(err)
+						}
+						resolve(result.links[0].url.replace(/dl=0$/g,"dl=1"));
 					})
 				} else if (!err) {
-					resolve(result.url);
+					resolve(result.url.replace(/dl=0$/g,"dl=1"));
 				} else {
+					throw err;
 					reject(err);
 				}
 			}
