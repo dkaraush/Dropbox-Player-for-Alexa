@@ -13,7 +13,10 @@
                 },
                 {
                     "name": "AMAZON.HelpIntent",
-                    "samples": []
+                    "samples": [
+                        "what can you do",
+                        "help"
+                    ]
                 },
                 {
                     "name": "AMAZON.StopIntent",
@@ -36,6 +39,17 @@
                         }
                     ],
                     "samples": [
+                        "play {query} file",
+                        "find {query} file",
+                        "search for {query} file",
+                        "search for {query} files",
+                        "find {query} files",
+                        "ask dropbox player to search {query}",
+                        "tell dropbpx player to search for {query}",
+                        "tell dropbox player to search {query}",
+                        "ask dropbox player to search for {query}",
+                        "ask dropbox player to play {query}",
+                        "tell dropbox player to play {query}",
                         "play {query}",
                         "search {query}",
                         "find {query}",
@@ -61,7 +75,7 @@
                     "name": "RefuseIntent",
                     "slots": [],
                     "samples": [
-                        "definetly no",
+                        "definitely no",
                         "no thanks",
                         "nope",
                         "no"
@@ -81,15 +95,6 @@
                         "disconnect my dropbox",
                         "disconnect my dropbox account",
                         "disconnect my account"
-                    ]
-                },
-                {
-                    "name": "StopIntent",
-                    "slots": [],
-                    "samples": [
-                        "pause",
-                        "please stop",
-                        "stop"
                     ]
                 }
             ],

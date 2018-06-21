@@ -46,8 +46,9 @@ exports.requestHandlers = [
 		if (from == "SearchIntent") {
 			var files = attributes.files;
 			
-			var link = await dropbox_download_link(tokens[userid].access_token, attributes.files[attributes.playingIndex]);
-			handlerInput.attributesManager.setSessionAttributes({currentLink: link, files: files, playingIndex: 0, offset: 0});
+			var link = await dropbox_download_link(tokens[userid].access_token, files[attributes.playingIndex]);
+			attributes.currentLink = link;
+			handlerInput.attributesManager.setSessionAttributes(attributes);
 			return res.speak("Playing \""+attributes.query+"\" file"+(files.length==1?"":"s")+"...")
 					.addAudioPlayerPlayDirective('REPLACE_ALL', link, files[0], 0)
 					.getResponse();
@@ -80,13 +81,12 @@ exports.requestHandlers = [
 {
 	name: "AMAZON.PauseIntent",
 	_handle: async function(handlerInput, userid, slots, res) {
-		console.log("paused");
-		console.dir(handlerInput.requestEnvelope);
 		var attributes = handlerInput.attributesManager.getSessionAttributes();
 		if (!attributes.currentLink) {
 			var link = await dropbox_download_link(tokens[userid].access_token, attributes.files[attributes.playingIndex]);
 			attributes.currentLink = link;
 		}
+		attributes.offset = handlerInput.requestEnvelope.request.offset;
 		handlerInput.attributesManager.setSessionAttributes(attributes);
 		return res.speak("Paused.").addAudioPlayerStopDirective().getResponse();
 	}
@@ -96,7 +96,6 @@ exports.requestHandlers = [
 	_handle(handlerInput, userid, slots, res) {
 		console.dir(handlerInput.requestEnvelope);
 		var attributes = handlerInput.attributesManager.getSessionAttributes();
-		
 		handlerInput.attributesManager.setSessionAttributes(attributes);
 		return res.speak("Resumed.")
 		          .addAudioPlayerPlayDirective('REPLACE_ALL', attributes.currentLink, attributes.files[attributes.playingIndex], attributes.offset)
@@ -106,7 +105,7 @@ exports.requestHandlers = [
 {
 	name: "AudioPlayer.PlaybackStarted",
 	_handle(handlerInput, userid, slots, res) {
-		var attributes = handlerInput.attributes.getSessionAttributes();
+		var attributes = handlerInput.attributesManager.getSessionAttributes();
 		handlerInput.attributesManager.setSessionAttributes(attributes);
 		return res.getResponse();
 	}
@@ -114,24 +113,41 @@ exports.requestHandlers = [
 {
 	name: "AudioPlayer.PlaybackFinished",
 	_handle: async function(handlerInput, userid, slots, res) {
-		var attributes = handlerInput.attributes.getSessionAttributes();
+		var attributes = handlerInput.attributesManager.getSessionAttributes();
 		attributes.playingIndex++;
 		attributes.offset = 0;
-		if (attributes.playingIndex == attributes.downloaded.length)
-			return res.speak("File"+(attributes.downloaded.length==1?"":"s")+" ended.");
-		handlerInput.attributesManager.setSessionAttributes(attributes);
-		var link = await dropbox_download_link(tokens[userid].access_token, attributes.files[attributes.playingIndex]);
-		return res.addAudioPlayerPlayDirective('REPLACE_ENQUEUED', link, attributes.files[attributes.playingIndex].substring(1), attributes.offset)
-				 .getResponse();
+		if (attributes.playingIndex+1 == attributes.files.length)
+			return res.speak("File"+(attributes.files.length==1?"":"s")+" ended.");
+		else {
+			if (attributes.nextLink) {
+				attributes.currentLink = attributes.nextLink;
+				delete attributes.nextLink;
+			}
+			handlerInput.attributesManager.setSessionAttributes(attributes);
+			return res.getResponse();
+		}
 	}
 },
 {
 	name: "AudioPlayer.PlaybackStopped",
 	_handle(handlerInput, userid, slots, res) {
-		var attributes = handlerInput.attributes.getSessionAttributes();
+		var attributes = handlerInput.attributesManager.getSessionAttributes();
 		attributes.offset = handlerInput.requestEnvelope.request.offset;
 		handlerInput.attributesManager.setSessionAttributes(attributes);
 		return res.getResponse();
+	}
+},
+{
+	name: "AudioPlayer.PlaybackNearlyFinished",
+	_handle(handlerInput, userid, slots, res) {
+		var attributes = handlerInput.attributesManager.getSessionAttributes();
+		if (attributes.playingIndex + 1 == attributes.files.length)
+			return res.getResponse();
+		var link = dropbox_download_link(tokens[userid].access_token,  attributes.files[attributes.playingIndex]);
+		attributes.nextLink = link;
+		handlerInput.attributesManager.setSessionAttributes(attributes);
+		return res.addAudioPlayerPlayDirective("ENQUEUE", link, attributes.files[attributes.playingIndex+1], 0)
+				  .getResponse();
 	}
 },
 {
@@ -156,7 +172,8 @@ exports.requestHandlers = [
 {
 	name: "AMAZON.StopIntent",
 	_handle: function (handlerInput, userid, slots, res) {
-		return res.speak("Stopped.").getResponse();
+		handlerInput.attributesManager.setSessionAttributes({});
+		return res.speak("Stopped.").addAudioPlayerStopDirective().getResponse();
 	}
 }
 ];
