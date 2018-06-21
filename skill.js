@@ -23,7 +23,7 @@ exports.requestHandlers = [
 		var files = await dropbox_search(tokens[userid].access_token, query);
 
 		if (files.length == 0) {
-			return res.speak("There is no files in your dropbox with \"" + query + "\" name. Try again")
+			return res.speak("There is no music files in your dropbox with \"" + query + "\" name. Try again")
 					 .reprompt()
 					 .getResponse();
 		} else {
@@ -68,7 +68,7 @@ exports.requestHandlers = [
 		delete tokens[userid];
 		saveJSONFile(TOKENS_FILE, tokens);
 
-		return res.speak("Your Dropbox account is forgotten. Check your mobile phone for new URL to connect another one.").getResponse();
+		return makeConnectingCard(res, handlerInput).speak("Your Dropbox account is forgotten. Check your mobile phone for new URL to connect another one.").getResponse();
 	}
 },
 {
@@ -144,8 +144,20 @@ exports.requestHandlers = [
 {
 	name: "AMAZON.HelpIntent",
 	_handle: function (handlerInput, userid, slots, res) {
-		return res.speak("Tell me which files to play and I will search for them. For example: Alexa, tell dropbox player to search for Radiohead.").getResponse();
+		return res.speak("Tell me which files to play and I will search for them. For example: Alexa, tell dropbox player to search for Radiohead.").reprompt().getResponse();
  	}
+},
+{
+	name: "AMAZON.CancelIntent",
+	_handle: function (handlerInput, userid, slots, res) {
+		return res.speak("Cancelled.").getResponse();
+	}
+},
+{
+	name: "AMAZON.StopIntent",
+	_handle: function (handlerInput, userid, slots, res) {
+		return res.speak("Stopped.").getResponse();
+	}
 }
 ];
 
@@ -171,12 +183,7 @@ exports.requestHandlers.forEach(handler => {
 	if (parsedName[parsedName.length-1] == "Handler")
 		parsedName.splice(parsedName.length - 1, 1);
 
-	if (parsedName[0] == "AudioPlayer") {
-		var requestName = handler.name;
-		handler.canHandle = function (handlerInput) {
-			return handlerInput.requestEnvelope.request.type == requestName;
-		}
-	} else if (parsedName[parsedName.length-1] == "Request") {
+	if (parsedName[parsedName.length-1] == "Request" || parsedName[0] == "AudioPlayer") {
 		var requestName = handler.name;
 		handler.canHandle = function (handlerInput) {
 			return handlerInput.requestEnvelope.request.type == requestName;
