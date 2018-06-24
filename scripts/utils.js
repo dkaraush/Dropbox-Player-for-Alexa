@@ -53,3 +53,23 @@ global.randomString = function (n) {
 	var q = "qwertyuiopasdfghjklzxcvbnm1234567890QWERTYUIOPASDFGHJKLZXCVBNM";
 	return Array.from({length: n}, x => q[~~(Math.random() * (q.length - 1))]).join("");
 }
+
+global.stringifyQuery = function (obj) {
+	var string = "";
+	for (var key in obj)
+		string += encodeURIComponent(key) + "=" + encodeURIComponent(obj[key]) + "&";
+	string = string.substring(0, string.length-1);
+	return string;//Array.from(Object.keys(obj), (key, i) => encodeURIComponent(key) + "=" + encodeURIComponent(obj[key]) + (Object.keys(obj).length == i+1 ? "" : "&")).join("");
+}
+
+global.getRawQuery = function (req) {
+	return (req.url.indexOf("?") >= 0) ? req.url.substring(req.url.indexOf("?")+1) : "";
+}
+
+global.upperCaseHeader = function (str) {
+	return str.replace(/(^|-)(\w)/g, a => a.toUpperCase());
+}
+
+Array.prototype.random = function () {
+	return this[~~(Math.random() * (this.length - 1))]
+}

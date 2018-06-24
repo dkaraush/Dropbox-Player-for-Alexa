@@ -5,29 +5,21 @@ var fs = require("fs");
 var ngrok = require("ngrok");
 var Alexa = require("ask-sdk");
 var http = require("http");
+var https = require('https');
 require("colors");
 
 // own files
-require("./utils.js");
-require("./dropbox-client.js");
-var lambda = require("./skill.js");
-var connected_page = fs.readFileSync("html/connected.html");
-var connecting_page = fs.readFileSync("html/connecting.html");
+require("./scripts/utils.js");
+require("./scripts/dropbox-client.js");
+var lambda = require("./scripts/skill.js");
 
-global.CONFIG_FILE = "config.json";
-global.TOKENS_FILE = "tokens.json";
-
-var config = loadJSONFile(CONFIG_FILE, {dropbox_app_key: "<your app key>", dropbox_app_secret: "<your app secret>", http_port: 8032, server_url: null}, true);
-global.tokens = loadJSONFile(TOKENS_FILE, {}, false);
-
-global.qrcode_api_url = "https://api.qrserver.com/v1/create-qr-code/?size={SIZE}&data={DATA}";
-global.dropbox_app_key = config.dropbox_app_key;
-global.dropbox_app_secret = config.dropbox_app_secret;
-
-global.redirects = {};
-global.serverURL = null;
+var config = loadJSONFile("config.json", {http_port: 8032, server_url: null}, true);
 const http_port = config.http_port;
+global.serverURL = config.server_url;
 
+var states = {};
+
+const dropbox_auth = "https://www.dropbox.com/oauth2/authorize";
 async function start() {
 	if (!config.server_url) {
 		serverURL = await ngrok.connect(http_port);
@@ -39,28 +31,22 @@ async function start() {
 	}
 
 	console.log("Instructions:".white.bold);
-	console.log(" 1.".bold + " Put this url (" + (serverURL).cyan.bold + ") as an redirect uri to your OAuth2 dropbox app.");
-	console.log(" 2.".bold + " Put this url (" + (serverURL + "/alexa/").cyan.bold + ") as an endpoint uri to your Amazon Skill. Select second item in the list about certifications.");
+	console.log(" 1.".bold + " Put this url (" + (serverURL+"/alexa/").cyan.bold + ") to Alexa skill's endpoint.");
+	console.log(" 2.".bold + " Put this url (" + (serverURL+"/auth/").cyan.bold + " and "+ (serverURL+"/token/").cyan.bold +") in "+"\"Account Linking\"".yellow.bold+" as an authorization URI.");
+	console.log(" 3.".bold + " Put this urls (" + (serverURL+"/receive-auth/").cyan.bold + ") in your Dropbox App as an redirect URL.");
 
 	var skill;
 	var http_server = http.createServer(function (req, res) {
+		//if (!proxy.check(req, res)) {
 		var url = req.url;
-		if (typeof redirects[url] !== "undefined") {
-			if ((Date.now() - redirects[url].created) > redirects[url].duration) {
-				res.statusCode = 200;
-				res.setHeader("Content-Type", "text/html");
-				res.end("<html><body><h2>Your redirect url is timed out.</h2></body></html>");
-				delete redirects[url];
-				return;
-			}
-			res.statusCode = 302;
-			res.setHeader("Set-Cookie", "userid=" + redirects[url].userid);
-			res.setHeader("Location", redirects[url].to);
-			res.end();
-			return;
-		} else if (url.split("/")[1] == "tracks") {
-			fs.createReadStream("." + url).pipe(res);
-		} else if (url == "/alexa/") {
+		var raw_query = getRawQuery(req);
+		var query = parseQuery(raw_query);
+		if (query[""] == "")
+			delete query[""];
+		if (raw_query !== "" && req.method == "GET")
+			url = url.substring(0, url.indexOf("?"));
+
+		if (url == "/alexa/" && req.method == "POST") {
 			var chunks = [];
 			req.on('data', chunk => chunks.push(chunk));
 			req.on('end', function () {
@@ -82,26 +68,81 @@ async function start() {
 					res.end('{error: "error"}');
 				  });
 			});
-		} else if (url.indexOf("?")>=0 && url.substring(0, url.indexOf("?")) == "/connected/") {
-			var raw_query = url.substring(url.indexOf("?")+1);
-			var query = parseQuery(raw_query);
-
-			if (!query.code && !query.state) {
+		} else if (url == "/auth/") {
+			var newState = randomString(100);
+			states[newState] = {value: query.state, redirect: query.redirect_uri};
+			query.state = newState;
+			query.redirect_uri = serverURL + "/receive-auth/";
+			res.statusCode = 302;
+			res.setHeader("Location", dropbox_auth + "?" + stringifyQuery(query));
+			res.end();
+		} else if (url == "/receive-auth/") {
+			var state = states[query.state];
+			if (typeof state === "undefined") {
 				res.statusCode = 400;
-				res.end();
+				res.end("We lost your state. Sorry :C");
 				return;
 			}
+			query.state = state.value;
+			res.statusCode = 302;
+			res.setHeader("Location", state.redirect + "?" + stringifyQuery(query));
+			res.end();
+		} else if (url == "/token/" && req.method == "POST") {
+			//https://api.dropboxapi.com/oauth2/token
+			
+			var chunks = [];
+			req.on('data', chunk => chunks.push(chunk));
+			req.on('end', () => {
+				var body = parseQuery(chunks.join(''));
+				body.redirect_uri = serverURL + "/receive-auth/";
+				delete body.client_id;
+				var raw_body = stringifyQuery(body);
 
-			global.tokens[query.state] = query;
-			saveJSONFile(TOKENS_FILE, global.tokens);
-			res.statusCode = 200;
-			res.setHeader("Content-Type", "text/html");
-			res.end(connected_page);
+				var headers = req.headers;
+				console.log("==========".red);
+				console.log("amazon => me".cyan.bold);
+				console.log(req.method + " " + req.url);
+				for (var header in headers)
+					console.log(upperCaseHeader(header)+": "+headers[header]);
+				console.log("----------".red);
+				console.log(raw_body);
+				console.log("==========".red);
+
+				headers.host = "api.dropboxapi.com";
+				if (typeof headers["x-forwarded-for"] !== "undefined")
+					headers["x-forwarded-for"] = "162.125.66.7";
+				headers["Content-Length"] = raw_body.length;
+				var req1 = https.request({
+					hostname: "api.dropboxapi.com",
+					path: "/oauth2/token",
+					port: 443,
+					headers: headers,
+					method: "POST"
+				}, (res1) => {
+					for (var header in res1.headers)
+						res.setHeader(upperCaseHeader(header), res1.headers[header]);
+					res.statusCode = res1.statusCode;
+					var giving = "";
+					res1.on('data', chunk => {giving+=chunk; res.write(chunk)});
+					res1.on('end', () => {
+						console.log("==========".red);
+						console.log("me <= dropbox".cyan.bold);
+						console.log(req1.method + " /oauth2/token (" + res1.statusCode + ")");
+						for (var header in res1.headers)
+							console.log(upperCaseHeader(header)+": "+res1.headers[header]);
+						console.log("----------".red);
+						console.log(giving);
+						console.log("==========".red);
+						res.end();
+					});
+				});
+				req1.end(raw_body);
+			});
 		} else {
-			res.statusCode = 200;
-			res.setHeader("Content-Type", "text/html");
-			res.end(connecting_page);
+			res.statusCode = 404;
+			res.end();
 		}
+		//}
 	});
 
 	http_server.listen(http_port, function () {

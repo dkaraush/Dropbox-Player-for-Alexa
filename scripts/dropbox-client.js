@@ -4,8 +4,6 @@ const dropboxV2Api = require('dropbox-v2-api');
 const fs = require("fs");
 const https = require('https');
 
-global.dropbox_oauth_url = "https://www.dropbox.com/1/oauth2/authorize?client_id={APP_KEY}&response_type=token&redirect_uri={REDIRECT_URI}&state={USER_ID}";
-
 global.dropbox_search = async function (accessToken, query) {
 	return new Promise((resolve, reject) => {
 		dropboxV2Api.authenticate({token: accessToken})({
@@ -29,10 +27,7 @@ global.dropbox_search = async function (accessToken, query) {
 }
 
 global.dropbox_download_link = async function (accessToken, path) {
-	var ext = path.substring(path.indexOf(".")+1);
-	var filename = randomString(32)+"."+ext;
 	return new Promise((resolve, reject) => {
-		var password = randomString(64);
 		dropboxV2Api.authenticate({token: accessToken})({
 			resource: 'sharing/create_shared_link_with_settings',
 			parameters: {
@@ -51,7 +46,7 @@ global.dropbox_download_link = async function (accessToken, path) {
 					}
 				}, (err, result, response) => {
 					if (err) {
-						console.log(err);
+						//console.log(err);
 						//throw err;
 						reject(err);
 					}
@@ -69,10 +64,6 @@ global.dropbox_download_link = async function (accessToken, path) {
 
 function getRedirectingLink(url, callback) {
 	https.get(url, (res) => {
-		if (res.statusCode == 302) {
-			callback(res.headers.location.toString());
-		} else {
-			callback(url);
-		}
+		callback(res.statusCode == 302 ? res.headers.location.toString() : url);
 	})
 }

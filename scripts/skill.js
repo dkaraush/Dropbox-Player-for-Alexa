@@ -3,7 +3,7 @@
 exports.requestHandlers = [
 {
 	name: "LaunchRequest",
-	_handle(handlerInput, userid, slots, res) {
+	_handle(handlerInput, user, slots, res) {
 		return res.speak("Your dropbox account successfully connected. Tell me what to play.")
 			   .reprompt()
 			   .getResponse();	
@@ -11,16 +11,16 @@ exports.requestHandlers = [
 },
 {
 	name: "SessionEndedRequest",
-	_handle(handlerInput, userid, slots, res) {
+	_handle(handlerInput, user, slots, res) {
 		return res.speak("Goodbye!")
 				.getResponse();
 	}
 },
 {
 	name: "SearchIntent",
-	_handle: async function(handlerInput, userid, slots, res) {
+	_handle: async function(handlerInput, user, slots, res) {
 		var query = slots.query.value;
-		var files = await dropbox_search(tokens[userid].access_token, query);
+		var files = await dropbox_search(user.accessToken, query);
 
 		if (files.length == 0) {
 			return res.speak("There is no music files in your dropbox with \"" + query + "\" name. Try again")
@@ -39,14 +39,14 @@ exports.requestHandlers = [
 },
 {
 	name: "AcceptIntent",
-	_handle: async function (handlerInput, userid, slots, res) {
+	_handle: async function (handlerInput, user, slots, res) {
 		var attributes = handlerInput.attributesManager.getSessionAttributes();
 		var from = attributes.from;
 
 		if (from == "SearchIntent") {
 			var files = attributes.files;
 			
-			var link = await dropbox_download_link(tokens[userid].access_token, files[attributes.playingIndex]);
+			var link = await dropbox_download_link(user.accessToken, files[attributes.playingIndex]);
 			attributes.currentLink = link;
 			handlerInput.attributesManager.setSessionAttributes(attributes);
 			return res.speak("Playing \""+attributes.query+"\" file"+(files.length==1?"":"s")+"...")
@@ -59,31 +59,22 @@ exports.requestHandlers = [
 },
 {
 	name: "RefuseIntent",
-	_handle: function (handlerInput, userid, slots, res) {
+	_handle: function (handlerInput, user, slots, res) {
 		return res.speak("Ok.").getResponse();
  	}
 },
 {
-	name: "ForgetAccountIntent",
-	_handle(handlerInput, userid, slots, res) {
-		delete tokens[userid];
-		saveJSONFile(TOKENS_FILE, tokens);
-
-		return makeConnectingCard(res, handlerInput).speak("Your Dropbox account is forgotten. Check your mobile phone for new URL to connect another one.").getResponse();
-	}
-},
-{
 	name: "AMAZON.FallbackIntent",
-	_handle(handlerInput, userid, slots, res) {
+	_handle(handlerInput, user, slots, res) {
 		return res.speak("Sorry, I didn't understand.").getResponse();
 	}
 },
 {
 	name: "AMAZON.PauseIntent",
-	_handle: async function(handlerInput, userid, slots, res) {
+	_handle: async function(handlerInput, user, slots, res) {
 		var attributes = handlerInput.attributesManager.getSessionAttributes();
 		if (!attributes.currentLink) {
-			var link = await dropbox_download_link(tokens[userid].access_token, attributes.files[attributes.playingIndex]);
+			var link = await dropbox_download_link(user.accessToken, attributes.files[attributes.playingIndex]);
 			attributes.currentLink = link;
 		}
 		attributes.offset = handlerInput.requestEnvelope.request.offset;
@@ -93,7 +84,7 @@ exports.requestHandlers = [
 },
 {
 	name: "AMAZON.ResumeIntent",
-	_handle(handlerInput, userid, slots, res) {
+	_handle(handlerInput, user, slots, res) {
 		console.dir(handlerInput.requestEnvelope);
 		var attributes = handlerInput.attributesManager.getSessionAttributes();
 		handlerInput.attributesManager.setSessionAttributes(attributes);
@@ -104,7 +95,7 @@ exports.requestHandlers = [
 },
 {
 	name: "AudioPlayer.PlaybackStarted",
-	_handle(handlerInput, userid, slots, res) {
+	_handle(handlerInput, user, slots, res) {
 		var attributes = handlerInput.attributesManager.getSessionAttributes();
 		handlerInput.attributesManager.setSessionAttributes(attributes);
 		return res.getResponse();
@@ -112,11 +103,11 @@ exports.requestHandlers = [
 },
 {
 	name: "AudioPlayer.PlaybackFinished",
-	_handle: async function(handlerInput, userid, slots, res) {
+	_handle: async function(handlerInput, user, slots, res) {
 		var attributes = handlerInput.attributesManager.getSessionAttributes();
 		attributes.playingIndex++;
 		attributes.offset = 0;
-		if (attributes.playingIndex+1 == attributes.files.length)
+		if (attributes.playingIndex == attributes.files.length)
 			return res.speak("File"+(attributes.files.length==1?"":"s")+" ended.");
 		else {
 			if (attributes.nextLink) {
@@ -130,7 +121,7 @@ exports.requestHandlers = [
 },
 {
 	name: "AudioPlayer.PlaybackStopped",
-	_handle(handlerInput, userid, slots, res) {
+	_handle(handlerInput, user, slots, res) {
 		var attributes = handlerInput.attributesManager.getSessionAttributes();
 		attributes.offset = handlerInput.requestEnvelope.request.offset;
 		handlerInput.attributesManager.setSessionAttributes(attributes);
@@ -139,11 +130,11 @@ exports.requestHandlers = [
 },
 {
 	name: "AudioPlayer.PlaybackNearlyFinished",
-	_handle(handlerInput, userid, slots, res) {
+	_handle(handlerInput, user, slots, res) {
 		var attributes = handlerInput.attributesManager.getSessionAttributes();
 		if (attributes.playingIndex + 1 == attributes.files.length)
 			return res.getResponse();
-		var link = dropbox_download_link(tokens[userid].access_token,  attributes.files[attributes.playingIndex]);
+		var link = dropbox_download_link(user.accessToken,  attributes.files[attributes.playingIndex]);
 		attributes.nextLink = link;
 		handlerInput.attributesManager.setSessionAttributes(attributes);
 		return res.addAudioPlayerPlayDirective("ENQUEUE", link, attributes.files[attributes.playingIndex+1], 0)
@@ -152,26 +143,26 @@ exports.requestHandlers = [
 },
 {
 	name: "AudioPlayer.ClearQueue",
-	_handle(handlerInput, userid, slots, res) {
+	_handle(handlerInput, user, slots, res) {
 		handlerInput.attributesManager.setSessionAttributes({});
 		return res.addAudioPlayerStopDirective().getResponse();
 	}
 },
 {
 	name: "AMAZON.HelpIntent",
-	_handle: function (handlerInput, userid, slots, res) {
+	_handle: function (handlerInput, user, slots, res) {
 		return res.speak("Tell me which files to play and I will search for them. For example: Alexa, tell dropbox player to search for Radiohead.").reprompt().getResponse();
  	}
 },
 {
 	name: "AMAZON.CancelIntent",
-	_handle: function (handlerInput, userid, slots, res) {
+	_handle: function (handlerInput, user, slots, res) {
 		return res.speak("Cancelled.").getResponse();
 	}
 },
 {
 	name: "AMAZON.StopIntent",
-	_handle: function (handlerInput, userid, slots, res) {
+	_handle: function (handlerInput, user, slots, res) {
 		handlerInput.attributesManager.setSessionAttributes({});
 		return res.speak("Stopped.").addAudioPlayerStopDirective().getResponse();
 	}
@@ -214,18 +205,19 @@ exports.requestHandlers.forEach(handler => {
 	}
 
 	handler.handle = function (handlerInput) {
-		var userId = handlerInput.requestEnvelope.session.user.userId;
-		if (typeof tokens[userId] == "undefined") {
-			return makeConnectingCard(handlerInput.responseBuilder
-					.speak("You have to connect your Dropbox account first. Check your mobile phone for an URL and QR code of it."), handlerInput)
+		var user = handlerInput.requestEnvelope.context.System.user;
+		if (!user.accessToken) {
+			return makeConnectingCard(handlerInput.responseBuilder, handlerInput)
+					.speak("You have to link your Dropbox account first. Check your mobile phone.")
 					.getResponse();
 		}
 		var slots = handlerInput.requestEnvelope.request.intent ? handlerInput.requestEnvelope.request.intent.slots : null;
-		return handler._handle(handlerInput, userId, slots, handlerInput.responseBuilder)
+		return handler._handle(handlerInput, user, slots, handlerInput.responseBuilder)
 	}
 });
 
 function makeConnectingCard(response, handlerInput) {
+	/*
 	var userId = handlerInput.requestEnvelope.session.user.userId;
 	var link = replaceParameters(dropbox_oauth_url, {app_key: dropbox_app_key, redirect_uri: serverURL, user_id: userId});
 	var redirectLink = "/" + randomString(7);
@@ -234,4 +226,6 @@ function makeConnectingCard(response, handlerInput) {
 	var largeQrCode = replaceParameters(qrcode_api_url, {data: serverURL + redirectLink, size: "800x800"});
 	var fullRedirectLink = serverURL + redirectLink;
 	return response.withStandardCard("Dropbox Player", "Connect your Dropbox. Link: " + fullRedirectLink, smallQrCode, largeQrCode);
+	*/
+	return response.withLinkAccountCard();
 }
