@@ -99,14 +99,6 @@ async function start() {
 				var raw_body = stringifyQuery(body);
 
 				var headers = req.headers;
-				console.log("==========".red);
-				console.log("amazon => me".cyan.bold);
-				console.log(req.method + " " + req.url);
-				for (var header in headers)
-					console.log(upperCaseHeader(header)+": "+headers[header]);
-				console.log("----------".red);
-				console.log(raw_body);
-				console.log("==========".red);
 
 				headers.host = "api.dropboxapi.com";
 				if (typeof headers["x-forwarded-for"] !== "undefined")
@@ -125,14 +117,6 @@ async function start() {
 					var giving = "";
 					res1.on('data', chunk => {giving+=chunk; res.write(chunk)});
 					res1.on('end', () => {
-						console.log("==========".red);
-						console.log("me <= dropbox".cyan.bold);
-						console.log(req1.method + " /oauth2/token (" + res1.statusCode + ")");
-						for (var header in res1.headers)
-							console.log(upperCaseHeader(header)+": "+res1.headers[header]);
-						console.log("----------".red);
-						console.log(giving);
-						console.log("==========".red);
 						res.end();
 					});
 				});

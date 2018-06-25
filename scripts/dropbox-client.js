@@ -29,37 +29,21 @@ global.dropbox_search = async function (accessToken, query) {
 global.dropbox_download_link = async function (accessToken, path) {
 	return new Promise((resolve, reject) => {
 		dropboxV2Api.authenticate({token: accessToken})({
-			resource: 'sharing/create_shared_link_with_settings',
+			resource: 'files/get_temporary_link',
 			parameters: {
-				path: path,
-				settings: {
-					requested_visibility: "public"/*,
-					expires: (new Date(Date.now() + 3600000)).toISOString().replace(/\.\d+Z$/g,"Z") // + 1 hour*/
-				}
+				path: path
 			}
 		}, (err, result, response) => {
-			if (err && err.error_summary.indexOf("shared_link_already_exists")==0) {
-				dropboxV2Api.authenticate({token: accessToken})({
-					resource: 'sharing/list_shared_links',
-					parameters: {
-						path: path
-					}
-				}, (err, result, response) => {
-					if (err) {
-						//console.log(err);
-						//throw err;
-						reject(err);
-					}
-					getRedirectingLink(result.links[0].url.replace(/dl=0$/g,"dl=1"), resolve);
-				})
-			} else if (err == null) {
-				getRedirectingLink(result.url.replace(/dl=0$/g,"dl=1"), resolve);
-			} else {
-				//throw err;
+			if (err) {
+				console.dir(err);
 				reject(err);
+			} else {
+				console.log(path.green + " => " + result.link.cyan);
+				resolve(result.link);
 			}
 		})
 	});
+
 }
 
 function getRedirectingLink(url, callback) {
