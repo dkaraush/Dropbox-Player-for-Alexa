@@ -82,19 +82,54 @@
                     ]
                 },
                 {
-                    "name": "ForgetAccountIntent",
+                    "name": "PlayAllIntent",
                     "slots": [],
                     "samples": [
-                        "forget my account",
-                        "forget my dropbox account",
-                        "forget my dropbox",
-                        "forget dropbox",
-                        "forget account",
-                        "disconnect account",
-                        "disconnect dropbox account",
-                        "disconnect my dropbox",
-                        "disconnect my dropbox account",
-                        "disconnect my account"
+                        "play all from storage",
+                        "find all files",
+                        "search for all file",
+                        "play all files from storage",
+                        "play all",
+                        "play all music files",
+                        "play all files"
+                    ]
+                },
+                {
+                    "name": "AMAZON.LoopOffIntent",
+                    "samples": []
+                },
+                {
+                    "name": "AMAZON.LoopOnIntent",
+                    "samples": []
+                },
+                {
+                    "name": "AMAZON.NextIntent",
+                    "samples": []
+                },
+                {
+                    "name": "AMAZON.PreviousIntent",
+                    "samples": []
+                },
+                {
+                    "name": "AddIntent",
+                    "slots": [
+                        {
+                            "name": "query",
+                            "type": "AMAZON.SearchQuery"
+                        }
+                    ],
+                    "samples": [
+                        "push {query}",
+                        "push {query} to playlist",
+                        "push {query} files to playlist",
+                        "push {query} files",
+                        "append {query} to playlist",
+                        "append {query} files to playlist",
+                        "append {query} files",
+                        "append {query}",
+                        "add {query} files",
+                        "add {query} ",
+                        "add {query} to playlist"
                     ]
                 }
             ],
