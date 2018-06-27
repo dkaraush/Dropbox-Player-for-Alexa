@@ -50,8 +50,7 @@ global.replaceParameters = function (template, parameters) {
 }
 
 global.randomString = function (n) {
-	var q = "qwertyuiopasdfghjklzxcvbnm1234567890QWERTYUIOPASDFGHJKLZXCVBNM";
-	return Array.from({length: n}, x => q[~~(Math.random() * (q.length - 1))]).join("");
+	return Array.from({length: n}, x => "qwertyuiopasdfghjklzxcvbnm1234567890QWERTYUIOPASDFGHJKLZXCVBNM".split("").random()).join("");
 }
 
 global.stringifyQuery = function (obj) {

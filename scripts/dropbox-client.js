@@ -27,6 +27,7 @@ global.dropbox_search = async function (accessToken, query) {
 }
 
 global.dropbox_download_link = async function (accessToken, path) {
+	if (path[0] != "/") path = "/" + path;
 	return new Promise((resolve, reject) => {
 		dropboxV2Api.authenticate({token: accessToken})({
 			resource: 'files/get_temporary_link',
@@ -35,19 +36,10 @@ global.dropbox_download_link = async function (accessToken, path) {
 			}
 		}, (err, result, response) => {
 			if (err) {
-				console.dir(err);
 				reject(err);
 			} else {
-				console.log(path.green + " => " + result.link.cyan);
 				resolve(result.link);
 			}
 		})
 	});
-
-}
-
-function getRedirectingLink(url, callback) {
-	https.get(url, (res) => {
-		callback(res.statusCode == 302 ? res.headers.location.toString() : url);
-	})
 }

@@ -14,6 +14,7 @@ require("./scripts/dropbox-client.js");
 var lambda = require("./scripts/skill.js");
 
 var config = loadJSONFile("config.json", {http_port: 8032, server_url: null}, true);
+global.playingData = loadJSONFile("playing-data.json", {}, false);
 const http_port = config.http_port;
 global.serverURL = config.server_url;
 
@@ -32,8 +33,8 @@ async function start() {
 
 	console.log("Instructions:".white.bold);
 	console.log(" 1.".bold + " Put this url (" + (serverURL+"/alexa/").cyan.bold + ") to Alexa skill's endpoint.");
-	console.log(" 2.".bold + " Put this url (" + (serverURL+"/auth/").cyan.bold + " and "+ (serverURL+"/token/").cyan.bold +") in "+"\"Account Linking\"".yellow.bold+" as an authorization URI.");
-	console.log(" 3.".bold + " Put this urls (" + (serverURL+"/receive-auth/").cyan.bold + ") in your Dropbox App as an redirect URL.");
+	console.log(" 2.".bold + " Put this urls (" + (serverURL+"/auth/").cyan.bold + " & "+ (serverURL+"/token/").cyan.bold +") in "+"\"Account Linking\"".yellow.bold+" as an authorization URI.");
+	console.log(" 3.".bold + " Put this url (" + (serverURL+"/receive-auth/").cyan.bold + ") in your Dropbox App as an redirect URL.");
 
 	var skill;
 	var http_server = http.createServer(function (req, res) {
@@ -136,3 +137,13 @@ async function start() {
 
 start();
 
+function exitHandler(options, err) {
+	saveJSONFile("playing-data.json", playingData);
+    if (options.exit) process.exit();
+}
+
+process.on('exit', exitHandler.bind(null,{cleanup:true}));
+process.on('SIGINT', exitHandler.bind(null, {exit:true}));
+process.on('SIGUSR1', exitHandler.bind(null, {exit:true}));
+process.on('SIGUSR2', exitHandler.bind(null, {exit:true}));
+process.on('uncaughtException', exitHandler.bind(null, {exit:true}));
