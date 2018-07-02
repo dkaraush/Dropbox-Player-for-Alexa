@@ -307,7 +307,7 @@ exports.requestHandlers = [
 		var data = playingData[user.userId] || {};
 		data.defaultLoop = slots.bool.value == "on";
 		playingData[user.userId] = data;
-		return res.getResponse();
+		return res.speak(`Default loop set to ${data.defaultLoop?"on":"off"}.`).getResponse();
 	}
 },
 {
@@ -316,7 +316,7 @@ exports.requestHandlers = [
 		var data = playingData[user.userId] || {};
 		data.defaultShuffle = slots.bool.value == "on";
 		playingData[user.userId] = data;
-		return res.getResponse();
+		return res.speak(`Default shuffle set to ${data.defaultShuffle?"on":"off"}.`).getResponse();
 	}
 }
 ];

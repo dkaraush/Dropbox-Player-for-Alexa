@@ -150,6 +150,26 @@
                         "set normal loop to {bool}",
                         "set usual loop to {bool}"
                     ]
+                },
+                {
+                    "name": "SetShuffleDefaultIntent",
+                    "slots": [
+                        {
+                            "name": "bool",
+                            "type": "OnOff"
+                        }
+                    ],
+                    "samples": [
+                        "set usual shuffle {bool}",
+                        "usual shuffle {bool}",
+                        "set usual shuffle to {bool}",
+                        "set normal shuffle to {bool}",
+                        "set default shuffle {bool}",
+                        "set default shuffle to {bool}",
+                        "default shuffle to {bool}",
+                        "default shuffle {bool}",
+                        "normal shuffle {bool}"
+                    ]
                 }
             ],
             "types": [
@@ -158,12 +178,20 @@
                     "values": [
                         {
                             "name": {
-                                "value": "off"
+                                "value": "off",
+                                "synonyms": [
+                                    "no",
+                                    "false"
+                                ]
                             }
                         },
                         {
                             "name": {
-                                "value": "on"
+                                "value": "on",
+                                "synonyms": [
+                                    "true",
+                                    "yes"
+                                ]
                             }
                         }
                     ]
