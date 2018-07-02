@@ -37,6 +37,11 @@ Unfortunately, Amazon Linking Account sends a huge `state` string (up to 550 sym
 - Alexa, shuffle on
 - Alexa, shuffle off
 
+**Set default values**:
+
+- Alexa, ask dropbox player to set default loop to ON
+- Alexa, ask dropbox player to set default shuffle to OFF
+
 **Push new files into playing list**:
 
 - Alexa, ask dropbox player to push mozart files
