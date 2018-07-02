@@ -27,7 +27,13 @@ exports.requestHandlers = [
 					 .reprompt()
 					 .getResponse();
 		} else {
-			playingData[user.userId] = {query: query, files: Array.from(files, o => o.metadata.path_display.substring(1)), links: new Array(files.length), loop: false, shuffle: false};
+			var data = playingData[user.userId] || {};
+			data.query = query;
+			data.files = Array.from(files, o => o.metadata.path_display.substring(1));
+			data.links = new Array(files.length);
+			data.loop = data.defaultLoop || false;
+			data.shuffle = data.defaultShuffle || false;
+			playingData[user.userId] = data;
 			handlerInput.attributesManager.setSessionAttributes({from: "SearchIntent"});
 			return res.speak(`There ${(files.length==1?"is":"are")} ${files.length} file${files.length==1?"":"s"}. Play ${files.length==1?"it":"them"}?`)
 						.reprompt(`Play ${files.length==1?"it":"them"}?`)
@@ -147,9 +153,8 @@ exports.requestHandlers = [
 			data.playingIndex = 0;
 		else data.playingIndex++;
 
-		if (data.shuffle) {
+		if (data.shuffle)
 			data.playingIndex = Math.round(Math.random() * (data.files.length - 1));
-		}
 
 		if (!data.links[data.playingIndex]) {
 			data.links[data.playingIndex] = await dropbox_download_link(user.accessToken, data.files[data.playingIndex]);
@@ -180,8 +185,11 @@ exports.requestHandlers = [
 {
 	name: "AMAZON.StopIntent",
 	_handle: function (handlerInput, user, slots, res) {
-		playingData[user.userId] = {};
-		return res.speak("Stopped.").addAudioPlayerStopDirective().getResponse();
+		var data = playingData[user.userId];
+		for (var key in data)
+			if (key != "defaultLoop" || key != "defaultShuffle")
+				delete data[key];
+		return res.speak("Stopped.").getResponse();
 	}
 },
 {
@@ -290,6 +298,24 @@ exports.requestHandlers = [
 	name: "AMAZON.ShuffleOffIntent",
 	_handle(handlerInput, user, slots, res) {
 		playingData[user.userId].shuffle = false;
+		return res.getResponse();
+	}
+},
+{
+	name: "SetLoopDefaultIntent",
+	_handle(handlerInput, user, slots, res) {
+		var data = playingData[user.userId] || {};
+		data.defaultLoop = slots.bool.value == "on";
+		playingData[user.userId] = data;
+		return res.getResponse();
+	}
+},
+{
+	name: "SetShuffleDefaultIntent",
+	_handle(handlerInput, user, slots, res) {
+		var data = playingData[user.userId] || {};
+		data.defaultShuffle = slots.bool.value == "on";
+		playingData[user.userId] = data;
 		return res.getResponse();
 	}
 }

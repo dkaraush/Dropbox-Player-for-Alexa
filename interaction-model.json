@@ -131,9 +131,44 @@
                         "add {query} ",
                         "add {query} to playlist"
                     ]
+                },
+                {
+                    "name": "SetLoopDefaultIntent",
+                    "slots": [
+                        {
+                            "name": "bool",
+                            "type": "OnOff"
+                        }
+                    ],
+                    "samples": [
+                        "normal loop {bool}",
+                        "default loop {bool}",
+                        "set default loop {bool}",
+                        "set default loop to {bool}",
+                        "set normal loop {bool}",
+                        "set usual loop {bool}",
+                        "set normal loop to {bool}",
+                        "set usual loop to {bool}"
+                    ]
                 }
             ],
-            "types": []
+            "types": [
+                {
+                    "name": "OnOff",
+                    "values": [
+                        {
+                            "name": {
+                                "value": "off"
+                            }
+                        },
+                        {
+                            "name": {
+                                "value": "on"
+                            }
+                        }
+                    ]
+                }
+            ]
         }
     }
 }
