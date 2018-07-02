@@ -1,5 +1,32 @@
 'use strict';
 
+function METADATA(data) {
+	return {
+		title: data.files[data.playingIndex],
+		subtitle: "Dropbox playlist ("+(data.playingIndex+1)+"/"+data.files.length+")",
+		art: {
+			contentDescription: "Dropbox Icon",
+			sources: [
+				{
+				 	"url": serverURL + "/assets/album.png",
+					"widthPixels": 1024,
+					"heightPixels": 1024
+				}
+			]
+		},
+		backgroundImage: {
+			contentDescription: "Dropbox Background",
+			sources: [
+				{
+					"url": serverURL + "/assets/bg-blur.png",
+					"widthPixels": 1024,
+					"heightPixels": 640
+				}
+			]
+		}
+	}
+}
+
 exports.requestHandlers = [
 {
 	name: "LaunchRequest",
@@ -12,8 +39,7 @@ exports.requestHandlers = [
 {
 	name: "SessionEndedRequest",
 	_handle(handlerInput, user, slots, res) {
-		return res.speak("Goodbye!")
-				.getResponse();
+		return res.speak("Session ended.").getResponse();
 	}
 },
 {
@@ -23,7 +49,7 @@ exports.requestHandlers = [
 		var files = await dropbox_search(user.accessToken, query);
 
 		if (files.length == 0) {
-			return res.speak("There is no music files in your dropbox with \"" + query + "\" name. Try again")
+			return res.speak(`There is no music files in your dropbox with "${query}" name. Try again`)
 					 .reprompt()
 					 .getResponse();
 		} else {
@@ -35,9 +61,12 @@ exports.requestHandlers = [
 			data.shuffle = data.defaultShuffle || false;
 			playingData[user.userId] = data;
 			handlerInput.attributesManager.setSessionAttributes({from: "SearchIntent"});
-			return res.speak(`There ${(files.length==1?"is":"are")} ${files.length} file${files.length==1?"":"s"}. Play ${files.length==1?"it":"them"}?`)
-						.reprompt(`Play ${files.length==1?"it":"them"}?`)
-						.getResponse();
+			var hasDisplay = typeof handlerInput.requestEnvelope.context.System.device.supportedInterfaces.Display !== "undefined";
+			res = res.speak(`There ${(files.length==1?"is":"are")} ${files.length} file${files.length==1?"":"s"}${hasDisplay?" on display":""}. Play ${files.length==1?"it":"them"}?`)
+					 .reprompt(`Play ${files.length==1?"it":"them"}?`);
+			if (hasDisplay)
+				res = res.addRenderTemplateDirective(makeList(files));
+			return res.getResponse();
 		}
 	}
 },
@@ -46,7 +75,7 @@ exports.requestHandlers = [
 	_handle: async function (handlerInput, user, slots, res) {
 		var attributes = handlerInput.attributesManager.getSessionAttributes();
 		var from = attributes.from;
-		var data = playingData[user.userId];
+		var data = playingData[user.userId] || {};
 
 		if (from == "SearchIntent" || from == "PlayAllIntent" || from == "AddIntent") {
 			var files = data.files;
@@ -55,13 +84,15 @@ exports.requestHandlers = [
 			data.offset = 0;
 			var link = await dropbox_download_link(user.accessToken, files[data.playingIndex]);
 			data.links[data.playingIndex] = link;
+			playingData[user.userId] = data;
 			(function(user) {
 				var data = playingData[user.userId];
 				data.links.forEach(function (x, i) {
-					dropbox_download_link(user.accessToken, data.files[i]).then(link => data.links[i]=link);
+					dropbox_download_link(user.accessToken, data.files[i]).then(link => data.links[i] = link);
 				});
 			})(user);
-			return res.addAudioPlayerPlayDirective('REPLACE_ALL', link, data.token, 0)
+			return res.speak(`Playing ${data.files.length} file${data.files.length>1?"s":""}.`)
+					.addAudioPlayerPlayDirective('REPLACE_ALL', link, data.token, 0, null, METADATA(data))
 					.getResponse();
 		}
 		
@@ -77,11 +108,19 @@ exports.requestHandlers = [
 			return res.speak("There is no MP3 files in your dropbox.")
 					 .getResponse();
 		} else {
-			playingData[user.userId] = {files: Array.from(files, o => o.metadata.path_display.substring(1)), links: new Array(files.length), loop: false};
+			var data = playingData[user.userId] || {};
+			data.files = Array.from(files, o => o.metadata.path_display.substring(1));
+			data.links = new Array(files.length)
+			data.loop = data.defaultLoop || false;
+			data.shuffle = data.defaultShuffle || false;
+			playingData[user.userId] = data;
 			handlerInput.attributesManager.setSessionAttributes({from: "PlayAllIntent"});
-			return res.speak(`There ${(files.length==1?"is":"are")} ${files.length} file${files.length==1?"":"s"}. Play ${files.length==1?"it":"them"}?`)
-						.reprompt(`Play ${files.length==1?"it":"them"}?`)
-						.getResponse();
+			var hasDisplay = typeof handlerInput.requestEnvelope.context.System.device.supportedInterfaces.Display !== "undefined";
+			res = res.speak(`There ${files.length==1?"is":"are"} ${files.length} file${files.length==1?"":"s"}${hasDisplay?" on display":""}. Play ${files.length==1?"it":"them"}?`)
+					 .reprompt(`Play ${files.length==1?"it":"them"}?`)
+			if (hasDisplay)
+				res = res.addRenderTemplateDirective(makeList(files));
+			return res.getResponse();
 		}
 	}
 },
@@ -113,10 +152,11 @@ exports.requestHandlers = [
 {
 	name: "AMAZON.ResumeIntent",
 	_handle(handlerInput, user, slots, res) {
-		var data = playingData[user.userId];
+		var data = playingData[user.userId] || {};
 		data.token = randomString(16);
+		playingData[user.userId] = data;
 		return res.speak("Resumed.")
-					.addAudioPlayerPlayDirective('REPLACE_ALL', data.links[data.playingIndex], data.token, data.offset)
+					.addAudioPlayerPlayDirective('REPLACE_ALL', data.links[data.playingIndex], data.token, data.offset, null, METADATA(data))
 					.getResponse();
 	}
 },
@@ -129,6 +169,16 @@ exports.requestHandlers = [
 {
 	name: "AudioPlayer.PlaybackFinished",
 	_handle: async function(handlerInput, user, slots, res) {
+		var data = playingData[user.userId];
+		console.log("PlaybackFinished".cyan.bold);
+		console.log(data);
+		console.log("========".red.bold)
+		if (data && data.nextIndex) {
+			data.offset = 0;
+			data.playingIndex = data.nextIndex;
+			delete data.nextIndex;
+		}
+		console.log(data);
 		return res.getResponse();
 	}
 },
@@ -145,22 +195,25 @@ exports.requestHandlers = [
 	name: "AudioPlayer.PlaybackNearlyFinished",
 	_handle: async function(handlerInput, user, slots, res) {
 		var data = playingData[user.userId];
-		if (!data.loop && data.files.length <= data.playingIndex+1) {
+		if (!data)
 			return res.getResponse();
-		}
+		console.log("PlaybackNearlyFinished".cyan.bold);
+		console.log(JSON.stringify(data,"","\t"));
+		console.log("=============".red.bold);
+		data.nextIndex = data.playingIndex+1;
+		if (!data.loop && data.files.length <= data.nextIndex+1)
+			return res.getResponse();
 
-		if (data.files.length <= data.playingIndex+1) 
-			data.playingIndex = 0;
-		else data.playingIndex++;
+		if (data.nextIndex >= data.files.length) 
+			data.nextIndex = 0;
 
 		if (data.shuffle)
-			data.playingIndex = Math.round(Math.random() * (data.files.length - 1));
+			data.nextIndex = Math.round(Math.random() * (data.files.length - 1));
 
-		if (!data.links[data.playingIndex]) {
-			data.links[data.playingIndex] = await dropbox_download_link(user.accessToken, data.files[data.playingIndex]);
-		}
-
-		return res.addAudioPlayerPlayDirective("ENQUEUE", data.links[data.playingIndex], data.token, 0, data.token).getResponse();
+		if (!data.links[data.nextIndex])
+			data.links[data.nextIndex] = await dropbox_download_link(user.accessToken, data.files[data.nextIndex]);
+		console.log(JSON.stringify(data,"","\t"));
+		return res.addAudioPlayerPlayDirective("ENQUEUE", data.links[data.nextIndex], data.token, 0, data.token, METADATA(data)).getResponse();
 	}
 },
 {
@@ -194,8 +247,14 @@ exports.requestHandlers = [
 },
 {
 	name: "AMAZON.NextIntent",
+	alternatives: "PlaybackController.NextCommandIssued",
 	_handle: async function (handlerInput, user, slots, res) {
 		var data = playingData[user.userId];
+		if (!data) return res.getResponse();
+		console.log("NextIntent".cyan.bold);
+		console.log(JSON.stringify(data,"","\t"));
+		console.log("=============".red.bold);
+
 		data.playingIndex++;
 		if (data.playingIndex >= data.files.length && !data.loop)
 			return res.speak("Playlist ended").addAudioPlayerStopDirective().getResponse();
@@ -204,13 +263,18 @@ exports.requestHandlers = [
 		}
 		if (!data.links[data.playingIndex])
 			data.links[data.playingIndex] = await dropbox_download_link(user.accessToken, data.files[data.playingIndex]);
-		return res.addAudioPlayerPlayDirective("REPLACE_ALL", data.links[data.playingIndex], data.token, 0).getResponse();
+		data.offset = 0;
+		delete data.nextIndex;
+		console.log(data)
+		return res.addAudioPlayerPlayDirective("REPLACE_ALL", data.links[data.playingIndex], data.token, 0, null, METADATA(data)).getResponse();
 	}
 },
 {
 	name: "AMAZON.PreviousIntent",
+	alternatives: "PlaybackController.PreviousCommandIssued",
 	_handle: async function (handlerInput, user, slots, res) {
 		var data = playingData[user.userId];
+		if (!data) return res.getResponse();
 		data.playingIndex--;
 		if (data.playingIndex < 0) {
 			if (!data.loop)
@@ -221,24 +285,26 @@ exports.requestHandlers = [
 
 		if (!data.links[data.playingIndex])
 			data.links[data.playingIndex] = await dropbox_download_link(user.accessToken, data.files[data.playingIndex]);
-
-		data.token = randomString(16);
-		return res.addAudioPlayerPlayDirective("REPLACE_ALL", data.links[data.playingIndex], data.token, 0);
+		data.offset = 0;
+		delete data.nextIndex;
+		return res.addAudioPlayerPlayDirective("REPLACE_ALL", data.links[data.playingIndex], data.token, 0, null, METADATA(data));
 	}
 },
 {
 	name: "AMAZON.LoopOnIntent",
 	_handle: function (handlerInput, user, slots, res) {
-		var data = playingData[user.userId];
+		var data = playingData[user.userId] || {};
 		data.loop = true;
+		playingData[user.userId] = data;
 		return res.speak("Loop on.").getResponse();
 	}
 },
 {
 	name: "AMAZON.LoopOffIntent",
 	_handle: function (handlerInput, user, slots, res) {
-		var data = playingData[user.userId];
+		var data = playingData[user.userId] || {};
 		data.loop = false;
+		playingData[user.userId] = data;
 		return res.speak("Loop off.").getResponse();
 	}
 },
@@ -246,8 +312,8 @@ exports.requestHandlers = [
 	name: "AddIntent",
 	_handle: async function (handlerInput, user, slots, res) {
 		var query = slots.query.value;
-		var files = await dropbox_search(user.accessToken, query);
-		files = Array.from(files, o => o.metadata.path_display.substring(1));
+		var _files = await dropbox_search(user.accessToken, query);
+		var files = Array.from(_files, o => o.metadata.path_display.substring(1));
 
 		if (playingIndex[user.userId]) {
 			var wasLength = files.length;
@@ -269,19 +335,28 @@ exports.requestHandlers = [
 		} else {
 			var data = playingData[user.userId];
 			if (!data) {
-				playingData[user.userId] = {files: files, playingIndex: 0, links: new Array(files.length), offset: 0};
+				data = {};
+				data.files = files;
+				data.playingIndex = 0
+				data.links = new Array(files.length);
+				data.offset = 0;
+				data.loop = data.defaultLoop || false;
+				data.shuffle = data.defaultShuffle || false;
+				playingData[user.userId] = data;
+				var hasDisplay = typeof handlerInput.requestEnvelope.context.System.device.supportedInterfaces.Display !== "undefined";
 				handlerInput.attributesManager.setSessionAttributes({from: "AddIntent"});
-				return res.speak(`There ${files.length>1?"are":"is"} ${files.length} file${files.length>1?"s":""}. Play ${files.length>1?"them":"it"}?`)
-						  .reprompt(`Play ${files.length>1?"them":"it"}?`)
-						  .getResponse();
+				res = res.speak(`There ${files.length>1?"are":"is"} ${files.length} file${files.length>1?"s":""}. Play ${files.length>1?"them":"it"}?`)
+						 .reprompt(`Play ${files.length>1?"them":"it"}?`);
+				if (hasDisplay)
+					res.addRenderTemplateDirective(makeList(_files));
+				return res.getResponse();
 			} else {
 				data.files = data.files.concat(files);
 				data.links = data.links.concat(new Array(files.length));
 				data.links.forEach((l, i) => {
-					if (typeof l === "undefined") {
+					if (typeof l === "undefined")
 						dropbox_download_link(user.accessToken, data.files[i]).then(link => data.links[i] = link);
-					}
-				})
+				});
 				return res.speak(`Added. Playlist contains now ${data.files.length} file${data.files.length>1?"s":""}.`).getResponse();
 			}
 		}
@@ -337,6 +412,13 @@ exports.errorHandler = {
 }
 
 exports.requestHandlers.forEach(handler => {
+	var allNames = [];
+	allNames.push(handler.name);
+	if (typeof handler.alternatives === "string")
+		allNames.push(handler.alternatives);
+	else
+		allNames = allNames.concat(handler.alternatives);
+
 	var parsedName = handler.name.match(/AudioPlayer\.|[A-Z][a-z.]+|AMAZON\./g);
 	if (parsedName == null)
 		return;
@@ -381,22 +463,36 @@ function makeConnectingCard(response, handlerInput) {
 }
 
 function makeList(files) {
-	return {
-				"header": {
-					"namespace": "TemplateRuntime",
-					"name": "RenderTemplate",
-					"messageId": "message_id",
-					"dialogRequestId": "dialog_request_id"
+	var r = 
+	{
+		type: 'ListTemplate1',
+		token: 'Files',	
+		title: "Dropbox files",
+		listItems: Array.from(files, (file, i) => {
+		var filename = file.metadata.path_display.substring(1); 
+		return {
+			token: "item_"+(i+1),
+			image: {
+				sources: [
+					{
+						url: serverURL+"/assets/icon-white.png",
+						widthPixels: 200,
+						heightPixels: 200
+					}
+				],
+				contentDescription: "music"
+			},
+			textContent: {
+				primaryText: {
+					text: "<font size='6'>"+file.metadata.name+"</font>",
+					type: "RichText"
 				},
-				"payload": {
-					"token": "token",
-					"type": "ListTemplate1",
-					"title": {
-						"mainTitle": "Dropbox Files",
-						"subTitle": "Music files in your Dropbox storage"
-					},
-					//"skillIcon": {{IMAGE_STRUCTURE}},
-							"listItems": Array.from(files, (file, i) => {return {leftTextField: (i+1)+".", rightTextField: file}})
+				secondaryText: {
+					text: file.metadata.path_display,
+					type: "PlainText"
 				}
 			}
+		}})
+	};
+	return r;
 }

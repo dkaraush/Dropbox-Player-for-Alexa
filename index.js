@@ -13,10 +13,10 @@ require("./scripts/utils.js");
 require("./scripts/dropbox-client.js");
 var lambda = require("./scripts/skill.js");
 
-var config = loadJSONFile("config.json", {http_port: 8032, server_url: null}, true);
-global.playingData = loadJSONFile("playing-data.json", {}, false);
-const http_port = config.http_port;
-global.serverURL = config.server_url;
+var config = 			loadJSONFile("config.json", {http_port: 8032, server_url: null}, true);
+global.playingData = 	loadJSONFile("playing-data.json", {}, false);
+const http_port = 		config.http_port;
+global.serverURL = 		config.server_url;
 
 var states = {};
 
@@ -32,13 +32,12 @@ async function start() {
 	}
 
 	console.log("Instructions:".white.bold);
-	console.log(" 1.".bold + " Put this url (" + (serverURL+"/alexa/").cyan.bold + ") to Alexa skill's endpoint.");
-	console.log(" 2.".bold + " Put this urls (" + (serverURL+"/auth/").cyan.bold + " & "+ (serverURL+"/token/").cyan.bold +") in "+"\"Account Linking\"".yellow.bold+" as an authorization URI.");
-	console.log(" 3.".bold + " Put this url (" + (serverURL+"/receive-auth/").cyan.bold + ") in your Dropbox App as an redirect URL.");
+	console.log(" 1.".bold + ` Put this url (${(serverURL+"/alexa/").cyan.bold}) to Alexa skill's endpoint.`);
+	console.log(" 2.".bold + ` Put this urls (${(serverURL+"/auth/").cyan.bold} & ${(serverURL+"/token/").cyan.bold}) in ${"\"Account Linking\"".yellow.bold} as an authorization URI.`);
+	console.log(" 3.".bold + ` Put this url (${(serverURL+"/receive-auth/").cyan.bold}) in your Dropbox App as an redirect URL.`);
 
 	var skill;
-	var http_server = http.createServer(function (req, res) {
-		//if (!proxy.check(req, res)) {
+	http.createServer(function (req, res) {
 		var url = req.url;
 		var raw_query = getRawQuery(req);
 		var query = parseQuery(raw_query);
@@ -89,7 +88,7 @@ async function start() {
 			res.setHeader("Location", state.redirect + "?" + stringifyQuery(query));
 			res.end();
 		} else if (url == "/token/" && req.method == "POST") {
-			//https://api.dropboxapi.com/oauth2/token
+			// https://api.dropboxapi.com/oauth2/token
 			
 			var chunks = [];
 			req.on('data', chunk => chunks.push(chunk));
@@ -123,14 +122,14 @@ async function start() {
 				});
 				req1.end(raw_body);
 			});
+		} else if (url.split("/")[1] == "assets") {
+			res.statusCode = 200;
+			fs.createReadStream("."+url).pipe(res);
 		} else {
 			res.statusCode = 404;
 			res.end();
 		}
-		//}
-	});
-
-	http_server.listen(http_port, function () {
+	}).listen(http_port, function () {
 		console.log("HTTP server started on :" + http_port);
 	});
 }
@@ -139,6 +138,7 @@ start();
 
 function exitHandler(options, err) {
 	saveJSONFile("playing-data.json", playingData);
+	if (err) throw err;
     if (options.exit) process.exit();
 }
 
@@ -147,3 +147,7 @@ process.on('SIGINT', exitHandler.bind(null, {exit:true}));
 process.on('SIGUSR1', exitHandler.bind(null, {exit:true}));
 process.on('SIGUSR2', exitHandler.bind(null, {exit:true}));
 process.on('uncaughtException', exitHandler.bind(null, {exit:true}));
+
+setInterval(function () {
+	saveJSONFile("playing-data.json", playingData);
+}, 1000);
