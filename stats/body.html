@@ -40,14 +40,14 @@
 		  document.cookie = updatedCookie;
 		}
 	</script>
-	<link href="https://fonts.googleapis.com/css?family=Roboto:300,400,700" rel="stylesheet">
+	<link href="https://fonts.googleapis.com/css?family=Open+Sans:300,400,700" rel="stylesheet">
 	<style type="text/css">
 		html, head, body {
 			margin: 0;
 			padding: 0;
 			background: #ECEFF1;
 			transition: background 0.1s ease-in-out;
-			font-family: 'Roboto';
+			font-family: 'Open Sans';
 			-webkit-tap-highlight-color: transparent;
 		}
 		.eff {
@@ -133,6 +133,7 @@
 			overflow: hidden;
 			position: relative;
 			transition: filter 0.1s ease-in-out;
+			border-radius: 50%;
 		}
 		#back:hover {
 			opacity: 1;
@@ -199,10 +200,12 @@
 			word-break: break-all;
 			overflow: hidden;
 			white-space: pre-wrap;
-			background: rgba(0,0,0,0.1);
+			background: rgba(0,0,0,0.05);
 			padding: 0.5em;
 			border-radius: 2px;
 			transition: background 0.1s ease-in-out;
+			font-size: 0.8em;
+			font-family: Consolas, monospace;
 		}
 		#main h1, #main h2, #main h3 {
 			font-weight: 300;
@@ -295,6 +298,12 @@
 		}
 		pre {
 			background: rgba(255,255,255,0.05);
+		}
+		.number {
+			color: #2196F3;
+		}
+		.boolean {
+			color: #26A69A;
 		}
 	</style>
 	<script type="text/javascript">

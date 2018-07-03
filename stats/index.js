@@ -14,9 +14,9 @@ var fields = {
 	"CURRENT_USER_LAST_TEXT": query => dateDifferenceString(statistics[query.id].last_activity, Date.now()),
 	"CURRENT_USER_LAST_DATETIME": query => datetimeString(statistics[query.id].last_activity),
 	"CURRENT_USER_LAST_TIMESTAMP": query => statistics[query.id].last_activity,
-	"CURRENT_USER_DROPBOX_CONNECTED": query => statistics[query.id].dropbox.connected?"✔":"✖",
+	"CURRENT_USER_DROPBOX_CONNECTED": query => "✖✔"[statistics[query.id].dropbox.connected+0],
 	"CURRENT_USER_DROPBOX_TOKEN": query => statistics[query.id].dropbox.access_token,
-	"CURRENT_USER_HAS_DISPLAY": query => statistics[query.id].device.display?"✔":"✖",	
+	"CURRENT_USER_HAS_DISPLAY": query => "✖✔"[statistics[query.id].device.display+0],	
 	"EVENTS_CURRENT_PAGE": query => {
 		if (!query.event_page || query.event_page < 0 || query.event_page >= (Math.ceil(statistics[query.id].events_count) / eventsPerPage))
 			return Math.ceil(statistics[query.id].events_count / eventsPerPage);
@@ -153,7 +153,7 @@ exports.reportAlexa = function(req_body, res_body, headersReq, headersRes, w_pl,
 	s.device = {display: Object.keys(context.device.supportedInterfaces).indexOf("Display")>=0, id: context.device.deviceId };
 	s.last_activity = Date.now();
 	var events;
-	if (!s.filename) {
+	if (!s.filename || !fs.existsSync("stats/data/"+s.filename)) {
 		s.filename = randomString(32) + ".json";
 		if (!fs.existsSync("stats/data"))
 			fs.mkdir("stats/data");

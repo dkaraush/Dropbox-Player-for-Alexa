@@ -286,7 +286,7 @@ exports.requestHandlers = [
 			data.links[data.playingIndex] = await dropbox_download_link(user.accessToken, data.files[data.playingIndex]);
 		data.offset = 0;
 		delete data.nextIndex;
-		return res.addAudioPlayerPlayDirective("REPLACE_ALL", data.links[data.playingIndex], data.token, 0, null, METADATA(data));
+		return res.addAudioPlayerPlayDirective("REPLACE_ALL", data.links[data.playingIndex], data.token, 0, null, METADATA(data)).getResponse();
 	}
 },
 {
@@ -421,13 +421,13 @@ exports.requestHandlers.forEach(handler => {
 	var conditions = new Array(allNames.length);
 	for (var i = 0; i < allNames.length; ++i) {
 		var name = allNames[i];
-		var parsedName = name.match(/AudioPlayer\.|[A-Z][a-z.]+|AMAZON\./g);
+		var parsedName = name.match(/AudioPlayer\.|PlaybackController\.|[A-Z][a-z.]+|AMAZON\./g);
 		if (parsedName == null)
 			return;
 		if (parsedName[parsedName.length-1] == "Handler")
 			parsedName.splice(parsedName.length - 1, 1);
 
-		if (parsedName[parsedName.length-1] == "Request" || parsedName[0] == "AudioPlayer.") {
+		if (parsedName[parsedName.length-1] == "Request" || parsedName[0] == "AudioPlayer." || parsedName[0] == "PlaybackController.") {
 			var requestName = name;
 			conditions[i] = (handlerInput) => handlerInput.requestEnvelope.request.type == requestName;
 		} else if (parsedName[parsedName.length - 1] == "Intent") {
@@ -435,6 +435,8 @@ exports.requestHandlers.forEach(handler => {
 				return handlerInput.requestEnvelope.request.type == "IntentRequest" &&
 						 handlerInput.requestEnvelope.request.intent.name == name;
 			}
+		} else {
+			console.log("Handler doesn't have its request: " + name);
 		}
 	}
 	handler.canHandle = function (handlerInput) {
@@ -475,7 +477,7 @@ function makeList(files) {
 			image: {
 				sources: [
 					{
-						url: serverURL+"/assets/icon-white.png",
+						url: serverURL+"/assets/icon.png",
 						widthPixels: 200,
 						heightPixels: 200
 					}
