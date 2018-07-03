@@ -3,6 +3,7 @@
 <head>
 	<meta charset="utf-8">
 	<title>Dropbox Music Player Stats</title>
+	<meta name="viewport" content="width=device-width, initial-scale=1">
 	<script type="text/javascript">
 		function getCookie(name) {
 		  var matches = document.cookie.match(new RegExp(
@@ -47,6 +48,7 @@
 			background: #ECEFF1;
 			transition: background 0.1s ease-in-out;
 			font-family: 'Roboto';
+			-webkit-tap-highlight-color: transparent;
 		}
 		.eff {
 			background: rgba(100,181,246,0.2);
@@ -65,7 +67,6 @@
 			height: 3em;
 		}
 		#title {
-			opacity: 0.8;
 			font-weight: 300;
 			color: white;
 			font-size: 1.25em;
@@ -76,8 +77,8 @@
 			vertical-align: middle;
 			display: inline-block;
 			height: 1.1em;
-			padding: 0.95em 0;
-			margin-left: 3em;
+			padding: 0.9em 0;
+			margin-left: 1em;
 		}
 		#menu a {
 			user-select: none;
@@ -246,6 +247,10 @@
 		.navigation {
 			text-align: right;
 			margin: 0.5em 0;
+			user-select: none;
+			-ms-user-select: none;
+			-moz-user-select: none;
+			-webkit-user-select: none;
 		}
 		.nextpage, .previouspage {
 			cursor: pointer;
@@ -255,10 +260,6 @@
 			display: inline-block;
 		}
 		.nextpage:hover, .previouspage:hover {
-			text-decoration: underline;
-			text-decoration-style: dashed;
-		}
-		.nextpage:active, .previouspage:active {
 			opacity: 0.7;
 		}
 		.nextpage.disabled, .previouspage.disabled {
@@ -270,6 +271,11 @@
 			cursor: no-drop;
 			opacity: 0.2;
 			text-decoration: none;
+		}
+		.separator {
+		    display: inline-block;
+		    padding: 0.5em 0;
+		    vertical-align: top;
 		}
 	</style>
 	<style type="text/css" id="nightcss">
@@ -392,9 +398,7 @@
 			div.addEventListener("mouseup", mouseup);
 			div.addEventListener("mouseover", mouseup);
 		}
-		document.querySelectorAll(".user").forEach(init);
-		document.querySelectorAll("#back").forEach(init);
-		document.querySelectorAll(".event").forEach(init);
+		document.querySelectorAll(".user, #back, .event, .previouspage, .nextpage").forEach(init);
 	</script>
 </body>
 </html>

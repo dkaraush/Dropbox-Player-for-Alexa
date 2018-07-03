@@ -63,7 +63,7 @@ async function start() {
 					.create();
 				}
 
-				var playingDataWas = playingData[body.context.System.user.userId];
+				var playingDataWas = Object.assign({}, playingData[body.context.System.user.userId]);
 				skill.invoke(body)
 				  .then(function(responseBody) {
 					res.end(JSON.stringify(responseBody,"","\t"));
@@ -135,6 +135,10 @@ async function start() {
 		} else if (url.split("/")[1] == "assets") {
 			if (!fs.existsSync("."+url)) {
 				res.statusCode = 404;
+				res.end();
+				return;
+			} else if (req.headers["cache-control"] == "max-age=0") {
+				res.statusCode = 304;
 				res.end();
 				return;
 			}
