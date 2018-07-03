@@ -99,20 +99,28 @@ exports.receive = function (req, res, url, query) {
 	var content = body.replace("{{CONTENT}}",fs.readFileSync("stats/"+rules[dirs[0]]).toString());
 	for (var field in fields) {
 		content = content.replace(new RegExp("\\{"+field+"\\}","g"), function () {
-			return fields[field](query)
+			try {
+				return fields[field](query)
+			} catch (e) {}
 		});
 	}
 	for (var templateName in templates) {
 		var template = templates[templateName];
 		content = content.replace(new RegExp("\\{\\{\\{"+templateName+"(.+)\\}\\}\\}", "mgs"), function (full,code) {
 			var result = "";
-			var array = template.array(query);
+			try {
+				var array = template.array(query);
+			} catch (e) {return "";}
 			for (var i = 0; i < array.length; ++i) {
 				var current = code;
 				for (var field in template) {
 					if (field == "array" || field == "ifempty")
 						continue;
-					current = current.replace(new RegExp("\\{"+field+"\\}","g"), template[field](array[i]));
+					current = current.replace(new RegExp("\\{"+field+"\\}","g"), function () {
+						try {
+							return template[field](array[i]);
+						} catch (e) {}
+					});
 				}
 				result += current;
 			}
