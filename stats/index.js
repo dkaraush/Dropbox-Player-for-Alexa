@@ -28,7 +28,7 @@ var fields = {
 }
 var templates = {
 	"USER_TEMPLATE": {
-		array: () => Array.from(Object.keys(statistics), x => statistics[x]).sort((a,b)=>a.last_activity>b.last_activity?1:(a.last_activity<b.last_activity?-1:0)),
+		array: () => Array.from(Object.keys(statistics), x => statistics[x]).sort((a,b)=>a.last_activity>b.last_activity?-1:(a.last_activity<b.last_activity?1:0)),
 		ifempty: () => "<div id='empty'>Empty :C</div>",
 		"USER_ID": (user) => user.id,
 		"USER_LAST": (user) => dateDifferenceString(user.last_activity, Date.now())
@@ -145,8 +145,7 @@ exports.reportAlexa = function(req_body, res_body, headersReq, headersRes, w_pl,
 	}
 	if (typeof statistics[user.userId] === "undefined") {
 		statistics[user.userId] = {
-			id: user.userId,
-			events: []
+			id: user.userId
 		};
 	}
 	var s = statistics[user.userId];
@@ -157,7 +156,8 @@ exports.reportAlexa = function(req_body, res_body, headersReq, headersRes, w_pl,
 	if (!s.filename) {
 		s.filename = randomString(32) + ".json";
 		if (!fs.existsSync("stats/data"))
-			fs.mkdir("stats/data")
+			fs.mkdir("stats/data");
+		events = [];
 	} else {
 		events = JSON.parse(fs.readFileSync("stats/data/"+s.filename).toString());
 	}

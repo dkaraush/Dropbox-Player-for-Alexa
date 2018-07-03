@@ -138,9 +138,12 @@ exports.requestHandlers = [
 },
 {
 	name: "AMAZON.PauseIntent",
+	alternatives: "PlaybackController.PauseCommandIssued",
 	_handle: async function(handlerInput, user, slots, res) {
 		playingData[user.userId].offset = handlerInput.requestEnvelope.request.offsetInMilliseconds;
-		return res.speak("Paused.").addAudioPlayerStopDirective().getResponse();
+		if (handlerInput.requestEnvelope.request.intent.name == "AMAZON.PauseIntent")
+			res = res.speak("Paused.");
+		return res.addAudioPlayerStopDirective().getResponse();
 	}
 },
 {
@@ -151,12 +154,14 @@ exports.requestHandlers = [
 },
 {
 	name: "AMAZON.ResumeIntent",
+	alternatives: "PlaybackController.PlayCommandIssued",
 	_handle(handlerInput, user, slots, res) {
 		var data = playingData[user.userId] || {};
 		data.token = randomString(16);
 		playingData[user.userId] = data;
-		return res.speak("Resumed.")
-					.addAudioPlayerPlayDirective('REPLACE_ALL', data.links[data.playingIndex], data.token, data.offset, null, METADATA(data))
+		if (handlerInput.requestEnvelope.request.intent.name == "AMAZON.PauseIntent")
+			res = res.speak("Resumed.");
+		return res.addAudioPlayerPlayDirective('REPLACE_ALL', data.links[data.playingIndex], data.token, data.offset, null, METADATA(data))
 					.getResponse();
 	}
 },
@@ -170,15 +175,11 @@ exports.requestHandlers = [
 	name: "AudioPlayer.PlaybackFinished",
 	_handle: async function(handlerInput, user, slots, res) {
 		var data = playingData[user.userId];
-		console.log("PlaybackFinished".cyan.bold);
-		console.log(data);
-		console.log("========".red.bold)
 		if (data && data.nextIndex) {
 			data.offset = 0;
 			data.playingIndex = data.nextIndex;
 			delete data.nextIndex;
 		}
-		console.log(data);
 		return res.getResponse();
 	}
 },
@@ -197,9 +198,6 @@ exports.requestHandlers = [
 		var data = playingData[user.userId];
 		if (!data)
 			return res.getResponse();
-		console.log("PlaybackNearlyFinished".cyan.bold);
-		console.log(JSON.stringify(data,"","\t"));
-		console.log("=============".red.bold);
 		data.nextIndex = data.playingIndex+1;
 		if (!data.loop && data.files.length <= data.nextIndex+1)
 			return res.getResponse();
@@ -212,7 +210,7 @@ exports.requestHandlers = [
 
 		if (!data.links[data.nextIndex])
 			data.links[data.nextIndex] = await dropbox_download_link(user.accessToken, data.files[data.nextIndex]);
-		console.log(JSON.stringify(data,"","\t"));
+		
 		return res.addAudioPlayerPlayDirective("ENQUEUE", data.links[data.nextIndex], data.token, 0, data.token, METADATA(data)).getResponse();
 	}
 },
@@ -251,21 +249,20 @@ exports.requestHandlers = [
 	_handle: async function (handlerInput, user, slots, res) {
 		var data = playingData[user.userId];
 		if (!data) return res.getResponse();
-		console.log("NextIntent".cyan.bold);
-		console.log(JSON.stringify(data,"","\t"));
-		console.log("=============".red.bold);
-
 		data.playingIndex++;
-		if (data.playingIndex >= data.files.length && !data.loop)
-			return res.speak("Playlist ended").addAudioPlayerStopDirective().getResponse();
+		if (data.playingIndex >= data.files.length && !data.loop) {
+			if (handlerInput.requestEnvelope.request.intent.name == "AMAZON.NextIntent")
+				res = res.speak("Playlist ended");
+			return res.addAudioPlayerStopDirective().getResponse();
+		}
 		else if (data.playingIndex >= data.files.length && data.loop) {
 			data.playingIndex = 0;
 		}
+
 		if (!data.links[data.playingIndex])
 			data.links[data.playingIndex] = await dropbox_download_link(user.accessToken, data.files[data.playingIndex]);
 		data.offset = 0;
 		delete data.nextIndex;
-		console.log(data)
 		return res.addAudioPlayerPlayDirective("REPLACE_ALL", data.links[data.playingIndex], data.token, 0, null, METADATA(data)).getResponse();
 	}
 },
@@ -277,9 +274,11 @@ exports.requestHandlers = [
 		if (!data) return res.getResponse();
 		data.playingIndex--;
 		if (data.playingIndex < 0) {
-			if (!data.loop)
-				return res.speak("It is first file").getResponse();
-			else 
+			if (!data.loop) {
+				if (handlerInput.requestEnvelope.request.intent.name == "AMAZON.NextIntent")
+					res = res.speak("It is first file");
+				return res.getResponse();
+			} else 
 				data.playingIndex = data.files.length - 1;
 		}
 
@@ -315,9 +314,9 @@ exports.requestHandlers = [
 		var _files = await dropbox_search(user.accessToken, query);
 		var files = Array.from(_files, o => o.metadata.path_display.substring(1));
 
-		if (playingIndex[user.userId]) {
+		if (playingData[user.userId]) {
 			var wasLength = files.length;
-			var data = playingIndex[user.userId];
+			var data = playingData[user.userId];
 			for (var i = 0; i < files.length; ++i) {
 				for (var j = 0; j < data.files.length; ++j) {
 					if (files[i] == data.files[j]) {
@@ -330,6 +329,7 @@ exports.requestHandlers = [
 			if (wasLength > 0 && files.length == 0)
 				return res.speak("This files are already in playlist.").getResponse();
 		}
+
 		if (files.length == 0) {
 			return res.speak("No files found. Try again").reprompt().getResponse();
 		} else {
