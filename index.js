@@ -12,13 +12,16 @@ require("colors");
 require("./scripts/utils.js");
 require("./scripts/dropbox-client.js");
 var lambda = require("./scripts/skill.js");
+var statsPage = require("./stats/index.js");
 
-var config = 			loadJSONFile("config.json", {http_port: 8032, server_url: null}, true);
+global.config = 		loadJSONFile("config.json", {http_port: 8032, server_url: null}, true);
 global.playingData = 	loadJSONFile("playing-data.json", {}, false);
 const http_port = 		config.http_port;
 global.serverURL = 		config.server_url;
 
 var states = {};
+
+statsPage.url = config.stats_url || randomString(16);
 
 const dropbox_auth = "https://www.dropbox.com/oauth2/authorize";
 async function start() {
@@ -35,6 +38,8 @@ async function start() {
 	console.log(" 1.".bold + ` Put this url (${(serverURL+"/alexa/").cyan.bold}) to Alexa skill's endpoint.`);
 	console.log(" 2.".bold + ` Put this urls (${(serverURL+"/auth/").cyan.bold} & ${(serverURL+"/token/").cyan.bold}) in ${"\"Account Linking\"".yellow.bold} as an authorization URI.`);
 	console.log(" 3.".bold + ` Put this url (${(serverURL+"/receive-auth/").cyan.bold}) in your Dropbox App as an redirect URL.`);
+	console.log();
+	console.log("You can view stats in "+(serverURL+"/"+statsPage.url).cyan.bold);
 
 	var skill;
 	http.createServer(function (req, res) {
@@ -58,9 +63,14 @@ async function start() {
 					.create();
 				}
 
+				var playingDataWas = playingData[body.context.System.user.userId];
 				skill.invoke(body)
 				  .then(function(responseBody) {
 					res.end(JSON.stringify(responseBody,"","\t"));
+					statsPage.reportAlexa(JSON.stringify(body,null,"\t"), 
+										  JSON.stringify(responseBody,null,"\t"), 
+										  req.method+" "+req.url+" HTTP/1.1\n"+headersString(req.headers), 
+										  res._header, playingDataWas, playingData[body.context.System.user.userId]);
 				  })
 				  .catch(function(error) {
 					console.log(error);
@@ -123,8 +133,15 @@ async function start() {
 				req1.end(raw_body);
 			});
 		} else if (url.split("/")[1] == "assets") {
+			if (!fs.existsSync("."+url)) {
+				res.statusCode = 404;
+				res.end();
+				return;
+			}
 			res.statusCode = 200;
 			fs.createReadStream("."+url).pipe(res);
+		} else if (url.split("/")[1] == statsPage.url) {
+			statsPage.receive(req, res, url, query);
 		} else {
 			res.statusCode = 404;
 			res.end();
@@ -138,6 +155,7 @@ start();
 
 function exitHandler(options, err) {
 	saveJSONFile("playing-data.json", playingData);
+	statsPage.save();
 	if (err) throw err;
     if (options.exit) process.exit();
 }

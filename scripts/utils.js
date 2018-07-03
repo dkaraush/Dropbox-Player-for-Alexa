@@ -69,6 +69,51 @@ global.upperCaseHeader = function (str) {
 	return str.replace(/(^|-)(\w)/g, a => a.toUpperCase());
 }
 
+global.dateDifferenceString = function (from, now) {
+	var difference = ~~((now - from) / 1000); // in seconds
+	if (difference < 60)
+		return difference + ` second${difference==1?"":"s"} ago`;
+	if (difference < 60*60)
+		return ~~(difference/60) + ` minute${~~(difference/60)==1?"":"s"} ago`;
+	if (difference < 60*60*24)
+		return ~~(difference/3600) + ` hour${~~(difference/3600)==1?"":"s"} ago`;
+	if (difference < 60*60*24*30) // 30 days
+		return ~~(difference/(60*60*24)) + ` day${~~(difference/3600/24)==1?"":"s"} ago`;
+	var d = new Date(from);
+	return d.getDate() + " " + months[d.getMonth()] + " " + d.getFullYear();
+}
+
+const months = "January,February,March,April,May,June,July,August,September,October,November,December".split(",");
+global.datetimeString = function (date) {
+	var d = new Date(date);
+	return addZeros(d.getHours())+":"+addZeros(d.getMinutes())+":"+addZeros(d.getSeconds())+" "+d.getDate() + " " + months[d.getMonth()] + " " + d.getFullYear();	
+}
+
+global.addZeros = function(str, n) {
+	if (!n) n = 2;
+	if (typeof str !== "string") str = str.toString();
+	if (str.length < n)
+		return "0".repeat(n - str.length) + str;
+	return str;
+}
+
+global.headersString = function (headers) {
+	return Array.from(Object.keys(headers), k => upperCaseHeader(k) + ": " + headers[k]).join("\n");
+}
+
+global.chunkArray = function (myArray, chunk_size){
+	var index = 0;
+	var arrayLength = myArray.length;
+	var tempArray = [];
+    
+	for (index = 0; index < arrayLength; index += chunk_size) {
+		myChunk = myArray.slice(index, index+chunk_size);
+	    tempArray.push(myChunk);
+    }
+
+	return tempArray;
+}
+
 Array.prototype.random = function () {
 	return this[~~(Math.random() * (this.length - 1))]
 }

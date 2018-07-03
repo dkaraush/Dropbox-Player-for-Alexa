@@ -1,0 +1,31 @@
+
+<div id="header">
+	<div id="header_content">
+		<div id="title">Dropbox Player</div>
+		<div id="menu">
+			<a href="/{STATS_URL}/main/" class="item selected">Users</a>
+			<a href="/{STATS_URL}/config/" class="item">Config</a>
+		</div>
+		<div id="nightswitcher" class="">
+			<div></div>
+			<div></div>
+		</div>
+	</div>
+</div>
+<div id="main">
+	<div id="main_content">
+		<h1><span href="/{STATS_URL}/user?id={CURRENT_USER_ID}" id="back"></span> Users - User - Event</h1>
+		{{{EVENT_INFO_TEMPLATE
+		<p><span class='key'>Time: </span>{EVENT_TIME_DIFFERENCE}&emsp;({EVENT_TIME_FULL})</p>
+		<h3>Request:</h3>
+		<pre>{EVENT_REQUEST_HEADERS}<br><br>{EVENT_REQUEST}</pre>
+		<h3>Response:</h3>
+		<pre>{EVENT_RESPONSE_HEADERS}{EVENT_RESPONSE}</pre>
+		<br><br>
+		<h3>Player data before request:</h3>
+		<pre>{EVENT_PLAYERDATA_WAS}</pre>
+		<h3>Player data after request:</h3>
+		<pre>{EVENT_PLAYERDATA_NOW}</pre>
+		}}}
+	</div>
+</div>

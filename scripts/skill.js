@@ -416,25 +416,35 @@ exports.requestHandlers.forEach(handler => {
 	allNames.push(handler.name);
 	if (typeof handler.alternatives === "string")
 		allNames.push(handler.alternatives);
-	else
+	else if (Array.isArray(handler.alternatives))
 		allNames = allNames.concat(handler.alternatives);
+	var conditions = new Array(allNames.length);
+	for (var i = 0; i < allNames.length; ++i) {
+		var name = allNames[i];
+		var parsedName = name.match(/AudioPlayer\.|[A-Z][a-z.]+|AMAZON\./g);
+		if (parsedName == null)
+			return;
+		if (parsedName[parsedName.length-1] == "Handler")
+			parsedName.splice(parsedName.length - 1, 1);
 
-	var parsedName = handler.name.match(/AudioPlayer\.|[A-Z][a-z.]+|AMAZON\./g);
-	if (parsedName == null)
-		return;
-	if (parsedName[parsedName.length-1] == "Handler")
-		parsedName.splice(parsedName.length - 1, 1);
-
-	if (parsedName[parsedName.length-1] == "Request" || parsedName[0] == "AudioPlayer.") {
-		var requestName = handler.name;
-		handler.canHandle = (handlerInput) => handlerInput.requestEnvelope.request.type == requestName;
-	} else if (parsedName[parsedName.length - 1] == "Intent") {
-		var intentName = parsedName.slice().join("");
-		handler.canHandle = function (handlerInput) {
-			return handlerInput.requestEnvelope.request.type == "IntentRequest" &&
-					 handlerInput.requestEnvelope.request.intent.name == intentName;
+		if (parsedName[parsedName.length-1] == "Request" || parsedName[0] == "AudioPlayer.") {
+			var requestName = name;
+			conditions[i] = (handlerInput) => handlerInput.requestEnvelope.request.type == requestName;
+		} else if (parsedName[parsedName.length - 1] == "Intent") {
+			conditions[i] = function (handlerInput) {
+				return handlerInput.requestEnvelope.request.type == "IntentRequest" &&
+						 handlerInput.requestEnvelope.request.intent.name == name;
+			}
 		}
 	}
+	handler.canHandle = function (handlerInput) {
+		for (var i = 0; i < conditions.length; ++i) {
+			if (conditions[i](handlerInput))
+				return true;
+		}
+		return false;
+	}
+
 
 	handler.handle = function (handlerInput) {
 		var user = handlerInput.requestEnvelope.context.System.user;
@@ -449,16 +459,6 @@ exports.requestHandlers.forEach(handler => {
 });
 
 function makeConnectingCard(response, handlerInput) {
-	/*
-	var userId = handlerInput.requestEnvelope.session.user.userId;
-	var link = replaceParameters(dropbox_oauth_url, {app_key: dropbox_app_key, redirect_uri: serverURL, user_id: userId});
-	var redirectLink = "/" + randomString(7);
-	redirects[redirectLink] = {created: Date.now(), duration: 1000*60*60*6, to: link, userid: userId};
-	var smallQrCode = replaceParameters(qrcode_api_url, {data: serverURL + redirectLink, size: "480x480"});
-	var largeQrCode = replaceParameters(qrcode_api_url, {data: serverURL + redirectLink, size: "800x800"});
-	var fullRedirectLink = serverURL + redirectLink;
-	return response.withStandardCard("Dropbox Player", "Connect your Dropbox. Link: " + fullRedirectLink, smallQrCode, largeQrCode);
-	*/
 	return response.withLinkAccountCard();
 }
 
