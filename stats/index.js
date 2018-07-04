@@ -60,7 +60,7 @@ var templates = {
 		"EVENT_PLAYERDATA_NOW": event => JSON.stringify(event.playingDataNow,null,"\t")
 	},
 	"PLAYER_DATA_TEMPLATE": {
-		array: query => [playingData[query.id] || undefined],
+		array: query => playingData[query.id] ? [playingData[query.id]] : [],
 		"FILES_LENGTH": data => data.files.length,
 		"FILES_STRING": data => JSON.stringify(Array.from(data.files, f => (f && f.length > 50) ? f.substring(0,50)+"..." : f), null, "\t"),
 		"LOADED_LINKS_LENGTH": data => data.links.filter(l => l != null).length,
@@ -88,13 +88,26 @@ exports.receive = function (req, res, url, query) {
 
 	if (url[url.length - 1] == "/")
 		url = url.substring(0, url.length-1);
-	// ====
 
 	var dirs = url.split("/");
+	if (url == "restart") {
+		res.statusCode = 302;
+		res.setHeader("Location", serverURL + "/" + exports.url + "/");
+		res.end();
+		process.exit(15);
+	} else if (url == "update") {
+		res.statusCode = 302;
+		res.setHeader("Location", serverURL + "/" + exports.url + "/");
+		res.end();
+		process.exit(17);
+	}
+
 	if (Object.keys(rules).indexOf(dirs[0]) == -1) {
 		url = "main";
 		dirs = ["main"];
 	}
+	// ====
+
 	var body = fs.readFileSync("stats/"+body_filename).toString();
 	var content = body.replace("{{CONTENT}}",fs.readFileSync("stats/"+rules[dirs[0]]).toString());
 	for (var field in fields) {
@@ -156,7 +169,7 @@ exports.reportAlexa = function(req_body, res_body, headersReq, headersRes, w_pl,
 	if (!s.filename || !fs.existsSync("stats/data/"+s.filename)) {
 		s.filename = randomString(32) + ".json";
 		if (!fs.existsSync("stats/data"))
-			fs.mkdir("stats/data");
+			fs.mkdirSync("stats/data");
 		events = [];
 	} else {
 		events = JSON.parse(fs.readFileSync("stats/data/"+s.filename).toString());

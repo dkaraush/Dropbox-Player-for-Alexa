@@ -16,6 +16,7 @@ global.loadJSONFile = function (filename, defaultValue, strong) {
 	try {
 		json = JSON.parse(fs.readFileSync(filename).toString());
 	} catch (e) {
+		console.log("reading " + filename.cyan + ": bad JSON");
 		throw e;
 	}
 

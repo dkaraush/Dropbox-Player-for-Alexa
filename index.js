@@ -12,7 +12,7 @@ require("colors");
 require("./scripts/utils.js");
 require("./scripts/dropbox-client.js");
 var lambda = require("./scripts/skill.js");
-var statsPage = require("./stats/index.js");
+var stats = require("./stats/index.js");
 
 global.config = 		loadJSONFile("config.json", {http_port: 8032, server_url: null}, true);
 global.playingData = 	loadJSONFile("playing-data.json", {}, false);
@@ -20,16 +20,17 @@ const http_port = 		config.http_port;
 global.serverURL = 		config.server_url;
 
 var states = {};
+var skill;
+var httpServer = null;
 
-statsPage.url = config.stats_url || randomString(16);
+stats.url = config.stats_url || randomString(16);
 
 const dropbox_auth = "https://www.dropbox.com/oauth2/authorize";
 async function start() {
-	if (!config.server_url) {
+	if (!serverURL) {
 		serverURL = await ngrok.connect(http_port);
 		console.log("ngrok started on " + serverURL.cyan.bold);
 	} else {
-		serverURL = config.server_url;
 		if (serverURL[serverURL.length-1] == "/")
 			serverURL=serverURL.substring(0, serverURL.length-1);
 	}
@@ -39,10 +40,9 @@ async function start() {
 	console.log(" 2.".bold + ` Put this urls (${(serverURL+"/auth/").cyan.bold} & ${(serverURL+"/token/").cyan.bold}) in ${"\"Account Linking\"".yellow.bold} as an authorization URI.`);
 	console.log(" 3.".bold + ` Put this url (${(serverURL+"/receive-auth/").cyan.bold}) in your Dropbox App as an redirect URL.`);
 	console.log();
-	console.log("You can view stats in "+(serverURL+"/"+statsPage.url).cyan.bold);
+	console.log("You can view stats in "+(serverURL+"/"+stats.url).cyan.bold);
 
-	var skill;
-	http.createServer(function (req, res) {
+	httpServer = http.createServer(function (req, res) {
 		var url = req.url;
 		var raw_query = getRawQuery(req);
 		var query = parseQuery(raw_query);
@@ -67,10 +67,10 @@ async function start() {
 				skill.invoke(body)
 				  .then(function(responseBody) {
 					res.end(JSON.stringify(responseBody,"","\t"));
-					statsPage.reportAlexa(JSON.stringify(body,null,"\t"), 
+					stats.reportAlexa(JSON.stringify(body,null,"\t"), 
 										  JSON.stringify(responseBody,null,"\t"), 
 										  req.method+" "+req.url+" HTTP/1.1\n"+headersString(req.headers), 
-										  res._header, playingDataWas, playingData[body.context.System.user.userId]);
+										  res._header, playingDataWas, Object.assign({}, playingData[body.context.System.user.userId]));
 				  })
 				  .catch(function(error) {
 					console.log(error);
@@ -144,13 +144,14 @@ async function start() {
 			}
 			res.statusCode = 200;
 			fs.createReadStream("."+url).pipe(res);
-		} else if (url.split("/")[1] == statsPage.url) {
-			statsPage.receive(req, res, url, query);
+		} else if (url.split("/")[1] == stats.url) {
+			stats.receive(req, res, url, query);
 		} else {
 			res.statusCode = 404;
 			res.end();
 		}
-	}).listen(http_port, function () {
+	});
+	httpServer.listen(http_port, function () {
 		console.log("HTTP server started on :" + http_port);
 	});
 }
@@ -158,9 +159,11 @@ async function start() {
 start();
 
 function exitHandler(options, err) {
+	console.log("Saving...");
 	saveJSONFile("playing-data.json", playingData);
-	statsPage.save();
-	if (err) throw err;
+	stats.save();
+	console.log("Saved.".green.bold);
+	if (err instanceof Error) throw err;
     if (options.exit) process.exit();
 }
 
@@ -169,7 +172,3 @@ process.on('SIGINT', exitHandler.bind(null, {exit:true}));
 process.on('SIGUSR1', exitHandler.bind(null, {exit:true}));
 process.on('SIGUSR2', exitHandler.bind(null, {exit:true}));
 process.on('uncaughtException', exitHandler.bind(null, {exit:true}));
-
-setInterval(function () {
-	saveJSONFile("playing-data.json", playingData);
-}, 1000);
