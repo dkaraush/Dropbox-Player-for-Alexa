@@ -521,7 +521,8 @@ function getMetadata(uid, path, link) {
 			var chunks = [];
 			req.on('data', chunk => chunks.push(chunk));
 			req.on('end', () => {
-				resolve(metadata.load(uid+path, Buffer.concat(chunks)));
+				metadata.load(uid+path, Buffer.concat(chunks))
+					.then(resolve);
 			})
 		});
 	})
