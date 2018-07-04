@@ -79,7 +79,8 @@ function update(cb) {
 				  	npm.on('close', function (code) {
 				  		if (code != 0) {
 				  			console.log('something went wrong!');
-				  		}
+				  		} else if (cb)
+				  			cb();
 				  	})
 				});
 		});
