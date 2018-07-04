@@ -21,7 +21,8 @@ module.exports = function (apikey) {
 				}
 				var tags = id3.read(buff) || {};
 				if (!tags.title && !tags.artist) {
-					filename = filename.replace(/_|\(.+\)|\'.+\'|\".+\"|\.mp3$/g," ");
+					filename = filename.replace(/_/g," ");
+					filename = filename.replace(/|\(.+\)|\'.+\'|\".+\"|[ ]{0,}\.mp3$|^[ ]{0,}/g,"");
 					var match = filename.split(/ - | — |-|—/g);
 					if (match.length == 2 || match.length == 2) {
 						tags.artist = match[0];
@@ -48,6 +49,7 @@ module.exports = function (apikey) {
 						req.on('end', () => {
 							var resp = JSON.parse(chunks.join(''));
 							if (resp.error && !resp.track) {
+								tags.imageURL = serverURL + "/assets/album.png";
 								alreadyLoaded[identificator] = tags;
 								resolve(tags);
 							} else if (resp.track && resp.track.album && resp.track.album.image) {
