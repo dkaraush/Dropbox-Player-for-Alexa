@@ -19,7 +19,7 @@ module.exports = function (apikey) {
 					resolve(alreadyLoaded[identificator]);
 					return;
 				}
-				var tags = id3.read(buff);
+				var tags = id3.read(buff) || {};
 				if (tags.image && tags.image.imageBuffer) {
 					if (!fs.existsSync("albums/"))
 						fs.mkdirSync("albums/");

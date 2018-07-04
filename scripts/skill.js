@@ -122,7 +122,8 @@ exports.requestHandlers = [
 	name: "AMAZON.PauseIntent",
 	alternatives: "PlaybackController.PauseCommandIssued",
 	_handle: async function(handlerInput, user, slots, res) {
-		playingData[user.userId].offset = handlerInput.requestEnvelope.request.offsetInMilliseconds;
+		if (playingData[user.userId])
+			playingData[user.userId].offset = handlerInput.requestEnvelope.request.offsetInMilliseconds;
 		if (handlerInput.requestEnvelope.request.intent.name == "AMAZON.PauseIntent")
 			res = res.speak("Paused.");
 		return res.addAudioPlayerStopDirective().getResponse();
@@ -146,7 +147,6 @@ exports.requestHandlers = [
 
 		return new Promise((resolve, reject) => {
 			getMetadata(user.userId, data.files[data.playingIndex], data.links[data.playingIndex]).then(tags => {
-				res = CardMetadata(res, tags.artist + " - " + tags.title, tags.imageURL, tags.imageURL);
 				resolve(res.addAudioPlayerPlayDirective('REPLACE_ALL', data.links[data.playingIndex], data.token, data.offset, null, AudioMetadata(tags.title, tags.artist, tags.imageURL))
 					.getResponse());
 			})
@@ -200,10 +200,8 @@ exports.requestHandlers = [
 			data.links[data.nextIndex] = await dropbox_download_link(user.accessToken, data.files[data.nextIndex]);
 		return new Promise((resolve, reject) => {
 			getMetadata(user.userId, data.files[data.nextIndex], data.links[data.nextIndex]).then(tags => {
-				tags.title = tags.title || data.files[data.playingIndex];
-				tags.artist = tags.artist || ("Dropbox Music Player ("+(data.playingIndex+1)+"/"+data.files.length+")");
 				resolve(res.addAudioPlayerPlayDirective("ENQUEUE", data.links[data.nextIndex], data.token, 0, data.token, AudioMetadata(tags.title, tags.artist, tags.imageURL)).getResponse());
-			})
+			});
 		});
 	}
 },
@@ -230,10 +228,13 @@ exports.requestHandlers = [
 	name: "AMAZON.StopIntent",
 	_handle: function (handlerInput, user, slots, res) {
 		var data = playingData[user.userId];
+		if (!data) {
+			res.speak("Stopped").addAudioPlayerStopDirective().getResponse();
+		}
 		for (var key in data)
 			if (key != "defaultLoop" || key != "defaultShuffle")
 				delete data[key];
-		return res.speak("Stopped.").getResponse();
+		return res.speak("Stopped.").addAudioPlayerStopDirective().getResponse();
 	}
 },
 {
@@ -258,8 +259,6 @@ exports.requestHandlers = [
 		delete data.nextIndex;
 		return new Promise((resolve, reject) => {
 			getMetadata(user.userId, data.files[data.playingIndex], data.links[data.playingIndex]).then(tags => {
-				tags.title = tags.title || data.files[data.playingIndex];
-				tags.artist = tags.artist || ("Dropbox Music Player ("+(data.playingIndex+1)+"/"+data.files.length+")");
 				res = CardMetadata(res, tags.artist + " - " + tags.title, tags.imageURL, tags.imageURL);
 				resolve(res.addAudioPlayerPlayDirective("REPLACE_ALL", data.links[data.playingIndex], data.token, 0, null, AudioMetadata(tags.title, tags.artist, tags.imageURL)).getResponse());
 			})
@@ -288,8 +287,6 @@ exports.requestHandlers = [
 		delete data.nextIndex;
 		return new Promise((resolve, reject) => {
 			getMetadata(user.userId, data.files[data.playingIndex], data.links[data.playingIndex]).then(tags => {
-				tags.title = tags.title || data.files[data.playingIndex];
-				tags.artist = tags.artist || ("Dropbox Music Player ("+(data.playingIndex+1)+"/"+data.files.length+")");
 				res = CardMetadata(res, tags.artist + " - " + tags.title, tags.imageURL, tags.imageURL);
 				resolve(res.addAudioPlayerPlayDirective("REPLACE_ALL", data.links[data.playingIndex], data.token, 0, null, AudioMetadata(tags.title, tags.artist, tags.imageURL)).getResponse());
 			})
@@ -517,7 +514,11 @@ function getMetadata(uid, path, link) {
 			req.on('data', chunk => chunks.push(chunk));
 			req.on('end', () => {
 				metadata.load(uid+path, Buffer.concat(chunks))
-					.then(resolve);
+					.then(function (tags) {
+						tags.title = tags.title || path;
+						tags.artist = tags.artist || "Dropbox Music Player";
+						resolve(tags);
+					});
 			})
 		});
 	})
