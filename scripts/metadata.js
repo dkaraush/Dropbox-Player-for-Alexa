@@ -14,14 +14,12 @@ module.exports = function (apikey) {
 		},
 		load: function (id, buff) {
 			return new Promise((resolve, reject) => {
-				console.log("metadata.js load");
 				if (alreadyLoaded[id]) {
 					resolve(alreadyLoaded[id]);
 					return;
 				}
 				var tags = id3.read(buff);
 				if (tags.image && tags.image.imageBuffer) {
-					console.log('already have an image');
 					if (!fs.existsSync("albums/"))
 						fs.mkdirSync("albums/");
 					var id = "albums/"+randomString(16)+".jpg";
@@ -30,7 +28,7 @@ module.exports = function (apikey) {
 					alreadyLoaded[id] = tags;
 					resolve(tags);
 				} else if (tags.artist && tags.album && apikey) {
-					console.log('i will try to download it from last fm');
+					console.log(replaceParameters(lastfm_url, {api_key: apikey, artist: tags.artist, album: tags.album}));
 					http.get(replaceParameters(lastfm_url, {api_key: apikey, artist: tags.artist, album: tags.album}), req => {
 						var chunks = [];
 						req.on('data', chunk => chunks.push(chunk));
@@ -59,7 +57,6 @@ module.exports = function (apikey) {
 						})
 					})
 				} else {
-					console.log('it will be standard');
 					tags.imageURL = serverURL + "/assets/album.png";
 					alreadyLoaded[id] = tags;
 					resolve(tags);
