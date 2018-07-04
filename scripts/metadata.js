@@ -32,17 +32,16 @@ module.exports = function (apikey) {
 					var url = replaceParameters(lastfm_url, {apikey: encodeURIComponent(apikey), 
 															 artist: encodeURIComponent(tags.artist), 
 															 track: encodeURIComponent(tags.title)});
-					console.log(url);
 					http.get(url, req => {
 						var chunks = [];
 						req.on('data', chunk => chunks.push(chunk));
 						req.on('end', () => {
-							var res = JSON.parse(chunks.join(''));
-							if (res.error && !res.album) {
+							var resp = JSON.parse(chunks.join(''));
+							if (resp.error && !resp.track) {
 								alreadyLoaded[identificator] = tags;
 								resolve(tags);
-							} else if (res.album) {
-								var images = res.album.image.filter(i => i["#text"].length>0);
+							} else if (resp.track && resp.track.album && resp.track.album.image) {
+								var images = resp.track.album.image.filter(i => i["#text"].length>0);
 								if (images.length == 0) {
 									alreadyLoaded[identificator] = tags;
 									resolve(tags);
