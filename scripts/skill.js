@@ -541,7 +541,7 @@ function AudioMetadata(title, subtitle, arturl) {
 			contentDescription: "Dropbox Icon",
 			sources: [
 				{
-				 	"url": art,
+				 	"url": arturl,
 					"widthPixels": 1024,
 					"heightPixels": 1024
 				}
