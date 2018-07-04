@@ -405,7 +405,7 @@ exports.errorHandler = {
 		return true;
 	},
 	handle(handlerInput, error) {
-		console.log(`Error handled: ${error.message}`);
+		exitHandler({}, error);
 		throw error;
 
 		return handlerInput.responseBuilder
@@ -422,9 +422,7 @@ exports.requestHandlers.forEach(handler => {
 		allNames.push(handler.alternatives);
 	else if (Array.isArray(handler.alternatives))
 		allNames = allNames.concat(handler.alternatives);
-	var conditions = new Array(allNames.length);
-	for (var i = 0; i < allNames.length; ++i) {
-		var name = allNames[i];
+	handler.conditions = Array.from(allNames, name => {
 		var parsedName = name.match(/AudioPlayer\.|PlaybackController\.|[A-Z][a-z.]+|AMAZON\./g);
 		if (parsedName == null)
 			return;
@@ -433,24 +431,23 @@ exports.requestHandlers.forEach(handler => {
 
 		if (parsedName[parsedName.length-1] == "Request" || parsedName[0] == "AudioPlayer." || parsedName[0] == "PlaybackController.") {
 			var requestName = name;
-			conditions[i] = (handlerInput) => handlerInput.requestEnvelope.request.type == requestName;
+			return (handlerInput) => handlerInput.requestEnvelope.request.type == requestName;
 		} else if (parsedName[parsedName.length - 1] == "Intent") {
-			conditions[i] = function (handlerInput) {
+			return function (handlerInput) {
 				return handlerInput.requestEnvelope.request.type == "IntentRequest" &&
 						 handlerInput.requestEnvelope.request.intent.name == name;
-			}
+			};
 		} else {
 			console.log("Handler doesn't have its request: " + name);
 		}
-	}
+	});
 	handler.canHandle = function (handlerInput) {
-		for (var i = 0; i < conditions.length; ++i) {
-			if (conditions[i](handlerInput))
+		for (var i = 0; i < handler.conditions.length; ++i) {
+			if (handler.conditions[i](handlerInput))
 				return true;
 		}
 		return false;
 	}
-
 
 	handler.handle = function (handlerInput) {
 		var user = handlerInput.requestEnvelope.context.System.user;
