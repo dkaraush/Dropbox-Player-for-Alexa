@@ -14,9 +14,7 @@ module.exports = function (apikey) {
 			return null;
 		},
 		load: function (identificator, buff) {
-			console.log("1. " + identificator)
 			return new Promise((resolve, reject) => {
-			console.log("2. " + identificator)
 				if (alreadyLoaded[identificator]) {
 					resolve(alreadyLoaded[identificator]);
 					return;
@@ -34,7 +32,7 @@ module.exports = function (apikey) {
 					var url = replaceParameters(lastfm_url, {apikey: encodeURIComponent(apikey), 
 															 artist: encodeURIComponent(tags.artist), 
 															 track: encodeURIComponent(tags.title)});
-
+					console.log(url);
 					http.get(url, req => {
 						var chunks = [];
 						req.on('data', chunk => chunks.push(chunk));
