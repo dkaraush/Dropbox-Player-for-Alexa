@@ -21,14 +21,14 @@ module.exports = function (apikey) {
 				}
 				var tags = id3.read(buff) || {};
 				if (!tags.title && !tags.artist) {
-					filename = filename.replace(/_|\(.+\)/g," ");
+					filename = filename.replace(/_|\(.+\)|\'.+\'|\".+\"|\.mp3$/g," ");
 					var match = filename.split(/ - | — |-|—/g);
 					if (match.length == 2 || match.length == 2) {
 						tags.artist = match[0];
 						tags.title = match[1];
 					}
 				}
-				
+
 				if (tags.image && tags.image.imageBuffer) {
 					if (!fs.existsSync("albums/"))
 						fs.mkdirSync("albums/");
