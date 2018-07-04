@@ -523,7 +523,7 @@ function CardMetadata(res, tags, file) {
 }
 function AudioMetadata(tags, file) {
 	return {
-		title: tags.title?tag.title:file,
+		title: tags.title?tags.title:file,
 		subtitle: tags.artist?tags.artist:"Dropbox Music Player",
 		art: {
 			contentDescription: "Dropbox Icon",
