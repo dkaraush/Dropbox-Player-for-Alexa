@@ -508,7 +508,8 @@ function makeList(files) {
 
 
 function getMetadata(uid, path, link) {
-	console.log('getMetadata()');
+	var id = uid + path;
+	console.log (id, uid, path);
 	return new Promise((resolve, reject) => {
 		var tags = metadata.check(uid+path);
 		if (tags)
