@@ -11,6 +11,9 @@ If you have a HTTPS connection, put also your server URL and change an HTTP port
 4. Make a skill in Alexa Console and put interaction model from `interaction-model.json`.
 5. In Endpoint choose HTTPS and put your URI (don't forget about path: `/alexa/`). If you use ngrok, choose second variant of certification (`...sub-domain of a domain that has a...`)
 
+#### Why I should put this URIs to Dropbox app and Alexa instead of putting Dropbox's URIs?
+Unfortunately, Amazon Linking Account sends a huge `state` string (up to 550 symbols) to Dropbox OAuth2. Dropbox doesn't allow this, because it has a limit of 500 bytes. Also, on the second POST request to get an `access_token`, Amazon sends argument `client_id` with authorization header: dropbox doesn't allow this, too. The only way to fix it is to put own URIs, receive requests, change arguments and redirect (OAuth2 form) or make own request to Dropbox.
+
 ## Update
 You can update repo by doing this:
 ```
@@ -18,9 +21,6 @@ node wrapper update
 ```
 It will download zip with repo, remove all files except configs and data, unzip and make `npm install`.
 You can also do that from stats page (check logs for its URL).
-
-#### Why I should put this URIs to Dropbox app and Alexa instead of putting Dropbox's URIs?
-Unfortunately, Amazon Linking Account sends a huge `state` string (up to 550 symbols) to Dropbox OAuth2. Dropbox doesn't allow this, because it has a limit of 500 bytes. Also, on the second POST request to get an `access_token`, Amazon sends argument `client_id` with authorization header: dropbox doesn't allow this, too. The only way to fix it is to put own URIs, receive requests, change arguments and redirect (OAuth2 form) or make own request to Dropbox.
 
 ## Skill Usage
 **Search and play files**:
