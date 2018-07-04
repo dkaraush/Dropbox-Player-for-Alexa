@@ -107,7 +107,7 @@ async function removeFiles(path) {
 		}
 	}
 	if (fs.readdirSync(path).length == 0)
-	fs.rmdirSync(path);
+		fs.rmdirSync(path);
 	return;
 }
 
