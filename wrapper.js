@@ -12,7 +12,8 @@ const dontRemove = [
 	"./config.json",
 	"./stats.json",
 	"./playing-data.json",
-	"./stats/data"
+	"./stats/data",
+	"./errors.json"
 ]
 
 function start () {

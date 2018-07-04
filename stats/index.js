@@ -4,7 +4,8 @@ var rules = {
 	"users": "users.html",
 	"user": "user.html",
 	"event": "event.html",
-	"status": "status.html"
+	"status": "status.html",
+	"errors": "errors.html"
 }
 
 const eventsPerPage = 10;
@@ -72,6 +73,13 @@ var templates = {
 		"OFFSET": data => data.offset,
 		"DEFAULT_LOOP": data => data.defaultLoop,
 		"DEFAULT_SHUFFLE": data => data.defaultShuffle
+	},
+	"ERROR_TEMPLATE": {
+		array: () => errors.slice().reverse(),
+		ifempty: () => "<div id='empty'>Empty :C</div>",
+		"ERROR_JSON": err => err.err,
+		"ERROR_TIME_DIFFERENCE": err => dateDifferenceString(err.time, Date.now()),
+		"ERROR_TIME_FULL": err => datetimeString(err.time)
 	}
 }
 
@@ -147,7 +155,9 @@ exports.receive = function (req, res, url, query) {
 }
 
 var statistics = loadJSONFile("stats.json", {}, false);
+var errors = loadJSONFile("errors.json", [], false);
 exports.reportAlexa = function(req_body, res_body, headersReq, headersRes, w_pl, pl) {
+
 	var req = JSON.parse(req_body);
 	var context, user;
 	try {
@@ -189,8 +199,16 @@ exports.reportAlexa = function(req_body, res_body, headersReq, headersRes, w_pl,
 	fs.writeFileSync("stats/data/"+s.filename, JSON.stringify(events));
 }
 
+exports.reportError = function (err) {
+	errors.push({
+		err: err.stack,
+		time: Date.now()
+	});
+}
+
 exports.save = function () {
 	saveJSONFile("stats.json", JSON.stringify(statistics));
+	saveJSONFile("errors.json", JSON.stringify(errors));
 }
 
 

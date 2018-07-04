@@ -1,31 +1,7 @@
 'use strict';
 
-function METADATA(data) {
-	return {
-		title: data.files[data.playingIndex],
-		subtitle: "Dropbox playlist ("+(data.playingIndex+1)+"/"+data.files.length+")",
-		art: {
-			contentDescription: "Dropbox Icon",
-			sources: [
-				{
-				 	"url": serverURL + "/assets/album.png",
-					"widthPixels": 1024,
-					"heightPixels": 1024
-				}
-			]
-		},
-		backgroundImage: {
-			contentDescription: "Dropbox Background",
-			sources: [
-				{
-					"url": serverURL + "/assets/bg-blur.png",
-					"widthPixels": 1024,
-					"heightPixels": 640
-				}
-			]
-		}
-	}
-}
+var https = require("https");
+var metadata = require("./metadata.js")(config.lastfm_api_key);
 
 exports.requestHandlers = [
 {
@@ -92,9 +68,14 @@ exports.requestHandlers = [
 					dropbox_download_link(user.accessToken, data.files[i]).then(link => data.links[i] = link);
 				});
 			})(user);
-			return res.speak(`Playing ${data.files.length} file${data.files.length>1?"s":""}.`)
-					.addAudioPlayerPlayDirective('REPLACE_ALL', link, data.token, 0, null, METADATA(data))
-					.getResponse();
+			return new Promise((resolve, reject) => {
+				getMetadata(user.userId, files[data.playingIndex], link).then(tags => {
+					res = CardMetadata(res, tags.artist + " - " + tags.title, tags.imageURL, tags.imageURL);
+					resolve(res.speak(`Playing ${data.files.length} file${data.files.length>1?"s":""}.`)
+							.addAudioPlayerPlayDirective('REPLACE_ALL', link, data.token, 0, null, AudioMetadata(tags.title, tags.artist, tags.imageURL))
+							.getResponse());
+				})
+			})
 		}
 		
 		return res.speak("Ehm... What yes?").getResponse();
@@ -162,8 +143,14 @@ exports.requestHandlers = [
 		playingData[user.userId] = data;
 		if (handlerInput.requestEnvelope.request.intent.name == "AMAZON.PauseIntent")
 			res = res.speak("Resumed.");
-		return res.addAudioPlayerPlayDirective('REPLACE_ALL', data.links[data.playingIndex], data.token, data.offset, null, METADATA(data))
-					.getResponse();
+
+		return new Promise((resolve, reject) => {
+			getMetadata(user.userId, data.files[data.playingIndex], data.links[data.playingIndex]).then(tags => {
+				res = CardMetadata(res, tags.artist + " - " + tags.title, tags.imageURL, tags.imageURL);
+				resolve(res.addAudioPlayerPlayDirective('REPLACE_ALL', data.links[data.playingIndex], data.token, data.offset, null, AudioMetadata(tags.title, tags.artist, tags.imageURL))
+					.getResponse());
+			})
+		});
 	}
 },
 {
@@ -211,8 +198,13 @@ exports.requestHandlers = [
 
 		if (!data.links[data.nextIndex])
 			data.links[data.nextIndex] = await dropbox_download_link(user.accessToken, data.files[data.nextIndex]);
-		
-		return res.addAudioPlayerPlayDirective("ENQUEUE", data.links[data.nextIndex], data.token, 0, data.token, METADATA(data)).getResponse();
+		return new Promise((resolve, reject) => {
+			getMetadata(user.userId, data.files[data.playingIndex], data.links[data.playingIndex]).then(tags => {
+				tags.title = tags.title || data.files[data.playingIndex];
+				tags.artist = tags.artist || ("Dropbox Music Player ("+(data.playingIndex+1)+"/"+data.files.length+")");
+				resolve(res.addAudioPlayerPlayDirective("ENQUEUE", data.links[data.nextIndex], data.token, 0, data.token, AudioMetadata(tags.title, tags.artist, tags.imageURL)).getResponse());
+			})
+		});
 	}
 },
 {
@@ -264,7 +256,14 @@ exports.requestHandlers = [
 			data.links[data.playingIndex] = await dropbox_download_link(user.accessToken, data.files[data.playingIndex]);
 		data.offset = 0;
 		delete data.nextIndex;
-		return res.addAudioPlayerPlayDirective("REPLACE_ALL", data.links[data.playingIndex], data.token, 0, null, METADATA(data)).getResponse();
+		return new Promise((resolve, reject) => {
+			getMetadata(user.userId, data.files[data.playingIndex], data.links[data.playingIndex]).then(tags => {
+				tags.title = tags.title || data.files[data.playingIndex];
+				tags.artist = tags.artist || ("Dropbox Music Player ("+(data.playingIndex+1)+"/"+data.files.length+")");
+				res = CardMetadata(res, tags.artist + " - " + tags.title, tags.imageURL, tags.imageURL);
+				resolve(res.addAudioPlayerPlayDirective("REPLACE_ALL", data.links[data.playingIndex], data.token, 0, null, AudioMetadata(tags.title, tags.artist, tags.imageURL)).getResponse());
+			})
+		});
 	}
 },
 {
@@ -287,7 +286,14 @@ exports.requestHandlers = [
 			data.links[data.playingIndex] = await dropbox_download_link(user.accessToken, data.files[data.playingIndex]);
 		data.offset = 0;
 		delete data.nextIndex;
-		return res.addAudioPlayerPlayDirective("REPLACE_ALL", data.links[data.playingIndex], data.token, 0, null, METADATA(data)).getResponse();
+		return new Promise((resolve, reject) => {
+			getMetadata(user.userId, data.files[data.playingIndex], data.links[data.playingIndex]).then(tags => {
+				tags.title = tags.title || data.files[data.playingIndex];
+				tags.artist = tags.artist || ("Dropbox Music Player ("+(data.playingIndex+1)+"/"+data.files.length+")");
+				res = CardMetadata(res, tags.artist + " - " + tags.title, tags.imageURL, tags.imageURL);
+				resolve(res.addAudioPlayerPlayDirective("REPLACE_ALL", data.links[data.playingIndex], data.token, 0, null, AudioMetadata(tags.title, tags.artist, tags.imageURL)).getResponse());
+			})
+		});
 	}
 },
 {
@@ -498,4 +504,54 @@ function makeList(files) {
 		}})
 	};
 	return r;
+}
+
+
+function addMetedata(uid, path, link, res) {
+	return new Promise((resolve, reject) => {
+		
+	})
+}
+function getMetadata(uid, path, link) {
+	return new Promise((resolve, reject) => {
+		var tags = metadata.check(uid+path);
+		if (tags)
+			resolve(tags);
+		https.get(link, req => {
+			var chunks = [];
+			req.on('data', chunk => chunks.push(chunk));
+			req.on('end', () => {
+				resolve(metadata.load(uid+path, Buffer.concat(chunks)));
+			})
+		});
+	})
+}
+function CardMetadata(res, title, arturl) {
+	return res.withStandardCard("Dropbox Player", "Now is playing: " + title, arturl, arturl);
+}
+function AudioMetadata(title, subtitle, arturl) {
+	return {
+		title: title,
+		subtitle: subtitle,
+		art: {
+			contentDescription: "Dropbox Icon",
+			sources: [
+				{
+				 	"url": art,
+					"widthPixels": 1024,
+					"heightPixels": 1024
+				}
+			]
+		},
+		backgroundImage: {
+			contentDescription: "Dropbox Background",
+			sources: [
+				{
+					"url": serverURL + "/assets/bg-blur.png",
+					"widthPixels": 1024,
+					"heightPixels": 640
+				}
+			]
+		}
+	}
 }

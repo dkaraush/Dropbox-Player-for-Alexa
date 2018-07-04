@@ -8,16 +8,16 @@ var http = require("http");
 var https = require('https');
 require("colors");
 
-// own files
 require("./scripts/utils.js");
-require("./scripts/dropbox-client.js");
-var lambda = require("./scripts/skill.js");
-var stats = require("./stats/index.js");
 
-global.config = 		loadJSONFile("config.json", {http_port: 8032, server_url: null}, true);
+global.config = 		loadJSONFile("config.json", {http_port: 8032, server_url: null, lastfm_api_key: null}, true);
 global.playingData = 	loadJSONFile("playing-data.json", {}, false);
 const http_port = 		config.http_port;
 global.serverURL = 		config.server_url;
+
+require("./scripts/dropbox-client.js");
+var lambda = require("./scripts/skill.js");
+var stats = require("./stats/index.js");
 
 var states = {};
 var skill;
@@ -132,7 +132,7 @@ async function start() {
 				});
 				req1.end(raw_body);
 			});
-		} else if (url.split("/")[1] == "assets") {
+		} else if (url.split("/")[1] == "assets" || url.split("/")[1] == "albums") {
 			if (!fs.existsSync("."+url)) {
 				res.statusCode = 404;
 				res.end();
@@ -159,16 +159,21 @@ async function start() {
 start();
 
 function exitHandler(options, err) {
-	console.log("Saving...");
-	saveJSONFile("playing-data.json", playingData);
-	stats.save();
-	console.log("Saved.".green.bold);
-	if (err instanceof Error) throw err;
-    if (options.exit) process.exit();
+	if (err instanceof Error) {
+		stats.reportError(err);
+    	console.log (err.toString().red);
+    }
+    if (options.exit) {
+		console.log("Saving...");
+		saveJSONFile("playing-data.json", playingData);
+		stats.save();
+		console.log("Saved.".green.bold);
+		process.exit();
+	}
 }
 
 process.on('exit', exitHandler.bind(null,{cleanup:true}));
 process.on('SIGINT', exitHandler.bind(null, {exit:true}));
 process.on('SIGUSR1', exitHandler.bind(null, {exit:true}));
 process.on('SIGUSR2', exitHandler.bind(null, {exit:true}));
-process.on('uncaughtException', exitHandler.bind(null, {exit:true}));
+process.on('uncaughtException', exitHandler.bind(null, {exit:false}));

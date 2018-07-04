@@ -138,7 +138,7 @@
 		#back:hover {
 			opacity: 1;
 		}
-		.user {
+		.user, .error {
 			background: white;
 			border-radius: 2px;
 			box-shadow: 0 2px 4px rgba(0,0,0,0.3);
@@ -149,6 +149,7 @@
 			overflow: hidden;
 			transition: background 0.1s ease-in-out;
 		}
+		.error {cursor: default;}
 		.user .id {
 			text-overflow: ellipsis; 
 			overflow: hidden; 
@@ -306,7 +307,7 @@
 		#header {
 			background: #212121;
 		}
-		.user, .event {
+		.user, .event, .error {
 			background: #37474F;
 		}
 		#back {
