@@ -78,6 +78,7 @@ exports.requestHandlers = [
 		var data = playingData[user.userId] || {};
 
 		if (from == "SearchIntent" || from == "PlayAllIntent" || from == "AddIntent") {
+			handlerInput.attributesManager.setSessionAttributes({});
 			var files = data.files;
 			data.token = randomString(16);
 			data.playingIndex = 0;
