@@ -513,14 +513,17 @@ function addMetedata(uid, path, link, res) {
 	})
 }
 function getMetadata(uid, path, link) {
+	console.log('getMetadata()');
 	return new Promise((resolve, reject) => {
 		var tags = metadata.check(uid+path);
 		if (tags)
 			resolve(tags);
+		console.log("downloading " + link)
 		https.get(link, req => {
 			var chunks = [];
 			req.on('data', chunk => chunks.push(chunk));
 			req.on('end', () => {
+				console.log("downloaded.")
 				metadata.load(uid+path, Buffer.concat(chunks))
 					.then(resolve);
 			})
