@@ -1,6 +1,7 @@
 node_modules/
 stats/data/
+albums/
 config.json
 playing-data.json
 stats.json
-albums/
+errors.json
