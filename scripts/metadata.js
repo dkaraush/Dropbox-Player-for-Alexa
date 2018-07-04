@@ -7,18 +7,18 @@ const lastfm_url = "http://ws.audioscrobbler.com/2.0/?method=track.getInfo&api_k
 var alreadyLoaded = {};
 module.exports = function (apikey) {
 	return {
-		check: function (id) {
-			if (alreadyLoaded[id]) {
-					console.log(id)
-				return alreadyLoaded[id];
+		check: function (identificator) {
+			if (alreadyLoaded[identificator]) {
+				return alreadyLoaded[identificator];
 			}
 			return null;
 		},
-		load: function (id, buff) {
+		load: function (identificator, buff) {
+			console.log("1. " + identificator)
 			return new Promise((resolve, reject) => {
-				if (alreadyLoaded[id]) {
-					console.log(id)
-					resolve(alreadyLoaded[id]);
+			console.log("2. " + identificator)
+				if (alreadyLoaded[identificator]) {
+					resolve(alreadyLoaded[identificator]);
 					return;
 				}
 				var tags = id3.read(buff);
@@ -28,7 +28,7 @@ module.exports = function (apikey) {
 					var id = "albums/"+randomString(16)+".jpg";
 					fs.writeFileSync(id, tags.image.imageBuffer);
 					tags.imageURL = serverURL + "/" + id;
-					alreadyLoaded[id] = tags;
+					alreadyLoaded[identificator] = tags;
 					resolve(tags);
 				} else if (tags.artist && tags.title && apikey) {
 					var url = replaceParameters(lastfm_url, {apikey: encodeURIComponent(apikey), 
@@ -41,12 +41,12 @@ module.exports = function (apikey) {
 						req.on('end', () => {
 							var res = JSON.parse(chunks.join(''));
 							if (res.error && !res.album) {
-								alreadyLoaded[id] = tags;
+								alreadyLoaded[identificator] = tags;
 								resolve(tags);
 							} else if (res.album) {
 								var images = res.album.image.filter(i => i["#text"].length>0);
 								if (images.length == 0) {
-									alreadyLoaded[id] = tags;
+									alreadyLoaded[identificator] = tags;
 									resolve(tags);
 									return;
 								}
@@ -57,18 +57,18 @@ module.exports = function (apikey) {
 									return ai < bi ? 1 : (ai > bi ? -1 : 0);
 								});
 								tags.imageURL = images[0]["#text"];
-								alreadyLoaded[id] = tags;
+								alreadyLoaded[identificator] = tags;
 								resolve(tags);
 							} else {
 								tags.imageURL = serverURL + "/assets/album.png";
-								alreadyLoaded[id] = tags;
+								alreadyLoaded[identificator] = tags;
 								resolve(tags);
 							}
 						})
 					})
 				} else {
 					tags.imageURL = serverURL + "/assets/album.png";
-					alreadyLoaded[id] = tags;
+					alreadyLoaded[identificator] = tags;
 					resolve(tags);
 				}
 			});
