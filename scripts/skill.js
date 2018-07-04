@@ -70,9 +70,9 @@ exports.requestHandlers = [
 			})(user);
 			return new Promise((resolve, reject) => {
 				getMetadata(user.userId, files[data.playingIndex], link).then(tags => {
-					res = CardMetadata(res, tags.artist + " - " + tags.title, tags.imageURL, tags.imageURL);
+					res = CardMetadata(res, tags, files[data.playingIndex]);
 					resolve(res.speak(`Playing ${data.files.length} file${data.files.length>1?"s":""}.`)
-							.addAudioPlayerPlayDirective('REPLACE_ALL', link, data.token, 0, null, AudioMetadata(tags.title, tags.artist, tags.imageURL))
+							.addAudioPlayerPlayDirective('REPLACE_ALL', link, data.token, 0, null, AudioMetadata(tags, data.files[data.playingIndex]))
 							.getResponse());
 				})
 			})
@@ -147,7 +147,7 @@ exports.requestHandlers = [
 
 		return new Promise((resolve, reject) => {
 			getMetadata(user.userId, data.files[data.playingIndex], data.links[data.playingIndex]).then(tags => {
-				resolve(res.addAudioPlayerPlayDirective('REPLACE_ALL', data.links[data.playingIndex], data.token, data.offset, null, AudioMetadata(tags.title, tags.artist, tags.imageURL))
+				resolve(res.addAudioPlayerPlayDirective('REPLACE_ALL', data.links[data.playingIndex], data.token, data.offset, null, AudioMetadata(tags, data.files[data.playingIndex]))
 					.getResponse());
 			})
 		});
@@ -200,7 +200,7 @@ exports.requestHandlers = [
 			data.links[data.nextIndex] = await dropbox_download_link(user.accessToken, data.files[data.nextIndex]);
 		return new Promise((resolve, reject) => {
 			getMetadata(user.userId, data.files[data.nextIndex], data.links[data.nextIndex]).then(tags => {
-				resolve(res.addAudioPlayerPlayDirective("ENQUEUE", data.links[data.nextIndex], data.token, 0, data.token, AudioMetadata(tags.title, tags.artist, tags.imageURL)).getResponse());
+				resolve(res.addAudioPlayerPlayDirective("ENQUEUE", data.links[data.nextIndex], data.token, 0, data.token, AudioMetadata(tags, data.files[data.nextIndex])).getResponse());
 			});
 		});
 	}
@@ -259,8 +259,8 @@ exports.requestHandlers = [
 		delete data.nextIndex;
 		return new Promise((resolve, reject) => {
 			getMetadata(user.userId, data.files[data.playingIndex], data.links[data.playingIndex]).then(tags => {
-				res = CardMetadata(res, tags.artist + " - " + tags.title, tags.imageURL, tags.imageURL);
-				resolve(res.addAudioPlayerPlayDirective("REPLACE_ALL", data.links[data.playingIndex], data.token, 0, null, AudioMetadata(tags.title, tags.artist, tags.imageURL)).getResponse());
+				res = CardMetadata(res, tags, data.files[data.playingIndex]);
+				resolve(res.addAudioPlayerPlayDirective("REPLACE_ALL", data.links[data.playingIndex], data.token, 0, null, AudioMetadata(tags, data.files[data.playingIndex])).getResponse());
 			})
 		});
 	}
@@ -287,8 +287,8 @@ exports.requestHandlers = [
 		delete data.nextIndex;
 		return new Promise((resolve, reject) => {
 			getMetadata(user.userId, data.files[data.playingIndex], data.links[data.playingIndex]).then(tags => {
-				res = CardMetadata(res, tags.artist + " - " + tags.title, tags.imageURL, tags.imageURL);
-				resolve(res.addAudioPlayerPlayDirective("REPLACE_ALL", data.links[data.playingIndex], data.token, 0, null, AudioMetadata(tags.title, tags.artist, tags.imageURL)).getResponse());
+				res = CardMetadata(res, tags, data.files[data.playingIndex]);
+				resolve(res.addAudioPlayerPlayDirective("REPLACE_ALL", data.links[data.playingIndex], data.token, 0, null, AudioMetadata(tags, data.files[data.playingIndex])).getResponse());
 			})
 		});
 	}
@@ -512,26 +512,24 @@ function getMetadata(uid, path, link) {
 			req.on('end', () => {
 				metadata.load(uid+path, Buffer.concat(chunks))
 					.then(function (tags) {
-						tags.title = tags.title || path;
-						tags.artist = tags.artist || "Dropbox Music Player";
 						resolve(tags);
 					});
 			})
 		});
 	})
 }
-function CardMetadata(res, title, arturl) {
-	return res.withStandardCard("Dropbox Player", "Now is playing: " + title, arturl, arturl);
+function CardMetadata(res, tags, file) {
+	return res.withStandardCard("Dropbox Player", "Now is playing: " + (tags.title&&tags.artist?tags.artist+" - "+tags.title:file), tags.imageURL, tags.imageURL);
 }
-function AudioMetadata(title, subtitle, arturl) {
+function AudioMetadata(tags, file) {
 	return {
-		title: title,
-		subtitle: subtitle,
+		title: tags.title?tag.title:file,
+		subtitle: tags.artist?tags.artist:"Dropbox Music Player",
 		art: {
 			contentDescription: "Dropbox Icon",
 			sources: [
 				{
-				 	"url": arturl,
+				 	"url": tags.imageURL,
 					"widthPixels": 1024,
 					"heightPixels": 1024
 				}

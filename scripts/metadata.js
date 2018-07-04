@@ -32,6 +32,7 @@ module.exports = function (apikey) {
 					var url = replaceParameters(lastfm_url, {apikey: encodeURIComponent(apikey), 
 															 artist: encodeURIComponent(tags.artist), 
 															 track: encodeURIComponent(tags.title)});
+					console.log(url);
 					http.get(url, req => {
 						var chunks = [];
 						req.on('data', chunk => chunks.push(chunk));
