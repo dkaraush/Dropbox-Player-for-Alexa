@@ -161,7 +161,7 @@ async function start() {
 
 start();
 
-function exitHandler(options, err) {
+global.exitHandler = function(options, err, code) {
 	if (err instanceof Error) {
 		stats.reportError(err);
     	console.log (err.toString().red);
@@ -171,7 +171,7 @@ function exitHandler(options, err) {
 		saveJSONFile("playing-data.json", playingData);
 		stats.save();
 		console.log("Saved.".green.bold);
-		process.exit();
+		process.exit(code ? code : 0);
 	}
 }
 

@@ -102,12 +102,12 @@ exports.receive = function (req, res, url, query) {
 		res.statusCode = 302;
 		res.setHeader("Location", serverURL + "/" + exports.url + "/");
 		res.end();
-		process.exit(15);
+		exitHandler({},null,15);
 	} else if (url == "update") {
 		res.statusCode = 302;
 		res.setHeader("Location", serverURL + "/" + exports.url + "/");
 		res.end();
-		process.exit(17);
+		exitHandler({},null,17);
 	}
 
 	if (Object.keys(rules).indexOf(dirs[0]) == -1) {
