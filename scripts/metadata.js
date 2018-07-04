@@ -13,13 +13,22 @@ module.exports = function (apikey) {
 			}
 			return null;
 		},
-		load: function (identificator, buff) {
+		load: function (identificator, filename, buff) {
 			return new Promise((resolve, reject) => {
 				if (alreadyLoaded[identificator]) {
 					resolve(alreadyLoaded[identificator]);
 					return;
 				}
 				var tags = id3.read(buff) || {};
+				if (!tags.title && !tags.artist) {
+					filename = filename.replace(/_|\(.+\)/g," ");
+					var match = filename.split(/ - | — |-|—/g);
+					if (match.length == 2 || match.length == 2) {
+						tags.artist = match[0];
+						tags.title = match[1];
+					}
+				}
+				
 				if (tags.image && tags.image.imageBuffer) {
 					if (!fs.existsSync("albums/"))
 						fs.mkdirSync("albums/");
