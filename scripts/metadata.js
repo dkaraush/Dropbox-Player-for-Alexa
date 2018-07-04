@@ -40,7 +40,7 @@ module.exports = function (apikey) {
 							if (res.error && !res.album) {
 								alreadyLoaded[id] = tags;
 								resolve(tags);
-							} else {
+							} else if (res.album) {
 								var images = res.album.image.filter(i => i["#text"].length>0);
 								if (images.length == 0) {
 									alreadyLoaded[id] = tags;
@@ -54,6 +54,10 @@ module.exports = function (apikey) {
 									return ai < bi ? 1 : (ai > bi ? -1 : 0);
 								});
 								tags.imageURL = images[0]["#text"];
+								alreadyLoaded[id] = tags;
+								resolve(tags);
+							} else {
+								tags.imageURL = serverURL + "/assets/album.png";
 								alreadyLoaded[id] = tags;
 								resolve(tags);
 							}
