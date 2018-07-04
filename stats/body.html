@@ -281,6 +281,22 @@
 		    padding: 0.5em 0;
 		    vertical-align: top;
 		}
+		.button {
+			border-radius: 2px;
+			transition: all 0.1s ease-in-out;
+			background: #03A9F4;
+			color: white;
+			overflow: hidden;
+			position: relative;
+			display: inline-block;
+			margin: 0 1em 0 0;
+			padding: 0.5em 1em;
+			cursor: pointer;
+			box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+		}
+		.button:hover {
+			background: #0288D1;
+		}
 	</style>
 	<style type="text/css" id="nightcss">
 		html,head,body {
@@ -304,6 +320,12 @@
 		}
 		.boolean {
 			color: #26A69A;
+		}
+		.button {
+			background: #FF9800;
+		}
+		.button:hover {
+			background: #F57C00;
 		}
 	</style>
 	<script type="text/javascript">
@@ -411,7 +433,7 @@
 			div.addEventListener("mouseup", mouseup);
 			div.addEventListener("mouseover", mouseup);
 		}
-		document.querySelectorAll(".user, #back, .event, .previouspage, .nextpage").forEach(init);
+		document.querySelectorAll(".user, #back, .event, .previouspage, .nextpage, .button").forEach(init);
 	</script>
 </body>
 </html>
