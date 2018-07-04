@@ -55,6 +55,8 @@ module.exports = function (apikey) {
 					})
 				} else {
 					tags.imageURL = serverURL + "/assets/album.png";
+					alreadyLoaded[id] = tags;
+					resolve(tags);
 				}
 			});
 		}
