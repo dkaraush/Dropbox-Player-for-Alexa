@@ -4,7 +4,7 @@ var rules = {
 	"users": "users.html",
 	"user": "user.html",
 	"event": "event.html",
-	"config": "config.html"
+	"status": "status.html"
 }
 
 const eventsPerPage = 10;
