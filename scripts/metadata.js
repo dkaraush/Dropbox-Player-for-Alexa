@@ -2,7 +2,7 @@ var id3 = require('node-id3');
 var http = require('http');
 var fs = require('fs');
 
-const lastfm_url = "http://ws.audioscrobbler.com/2.0?method=album.getinfo&api_key={API_KEY}&artist={ARTIST}&album={ALBUM}&format=json";
+const lastfm_url = "http://ws.audioscrobbler.com/2.0/?method=track.getInfo&api_key={APIKEY}&artist={ARTIST}&track={TRACK}&format=json";
 
 var alreadyLoaded = {};
 module.exports = function (apikey) {
@@ -27,9 +27,8 @@ module.exports = function (apikey) {
 					tags.imageURL = serverURL + "/" + id;
 					alreadyLoaded[id] = tags;
 					resolve(tags);
-				} else if (tags.artist && tags.album && apikey) {
-					console.log(replaceParameters(lastfm_url, {api_key: apikey, artist: tags.artist, album: tags.album}));
-					http.get(replaceParameters(lastfm_url, {api_key: apikey, artist: tags.artist, album: tags.album}), req => {
+				} else if (tags.artist && tags.title && apikey) {
+					http.get(encodeURIComponent(replaceParameters(lastfm_url, {apikey, artist: tags.artist, track: tags.title})), req => {
 						var chunks = [];
 						req.on('data', chunk => chunks.push(chunk));
 						req.on('end', () => {
