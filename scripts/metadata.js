@@ -8,13 +8,16 @@ var alreadyLoaded = {};
 module.exports = function (apikey) {
 	return {
 		check: function (id) {
-			if (alreadyLoaded[id])
+			if (alreadyLoaded[id]) {
+					console.log(id)
 				return alreadyLoaded[id];
+			}
 			return null;
 		},
 		load: function (id, buff) {
 			return new Promise((resolve, reject) => {
 				if (alreadyLoaded[id]) {
+					console.log(id)
 					resolve(alreadyLoaded[id]);
 					return;
 				}

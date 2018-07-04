@@ -199,7 +199,7 @@ exports.requestHandlers = [
 		if (!data.links[data.nextIndex])
 			data.links[data.nextIndex] = await dropbox_download_link(user.accessToken, data.files[data.nextIndex]);
 		return new Promise((resolve, reject) => {
-			getMetadata(user.userId, data.files[data.playingIndex], data.links[data.playingIndex]).then(tags => {
+			getMetadata(user.userId, data.files[data.nextIndex], data.links[data.nextIndex]).then(tags => {
 				tags.title = tags.title || data.files[data.playingIndex];
 				tags.artist = tags.artist || ("Dropbox Music Player ("+(data.playingIndex+1)+"/"+data.files.length+")");
 				resolve(res.addAudioPlayerPlayDirective("ENQUEUE", data.links[data.nextIndex], data.token, 0, data.token, AudioMetadata(tags.title, tags.artist, tags.imageURL)).getResponse());
@@ -507,11 +507,6 @@ function makeList(files) {
 }
 
 
-function addMetedata(uid, path, link, res) {
-	return new Promise((resolve, reject) => {
-		
-	})
-}
 function getMetadata(uid, path, link) {
 	console.log('getMetadata()');
 	return new Promise((resolve, reject) => {
