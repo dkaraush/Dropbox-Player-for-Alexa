@@ -73,9 +73,12 @@ async function start() {
 										  res._header, playingDataWas, Object.assign({}, playingData[body.context.System.user.userId]));
 				  })
 				  .catch(function(error) {
-					console.log(error);
 					res.statusCode = 500;
 					res.end('{error: "error"}');
+					stats.reportAlexa(JSON.stringify(body,null,"\t"), 
+									  "{error: \"error\"}", 
+									  req.method+" "+req.url+" HTTP/1.1\n"+headersString(req.headers), 
+									  res._header, playingDataWas, Object.assign({}, playingData[body.context.System.user.userId]));
 				  });
 			});
 		} else if (url == "/auth/") {
