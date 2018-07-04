@@ -28,7 +28,11 @@ module.exports = function (apikey) {
 					alreadyLoaded[id] = tags;
 					resolve(tags);
 				} else if (tags.artist && tags.title && apikey) {
-					http.get(encodeURIComponent(replaceParameters(lastfm_url, {apikey, artist: tags.artist, track: tags.title})), req => {
+					var url = replaceParameters(lastfm_url, {apikey: encodeURIComponent(apikey), 
+															 artist: encodeURIComponent(tags.artist), 
+															 track: encodeURIComponent(tags.title)});
+
+					http.get(url, req => {
 						var chunks = [];
 						req.on('data', chunk => chunks.push(chunk));
 						req.on('end', () => {
