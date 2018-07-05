@@ -142,7 +142,8 @@ exports.requestHandlers = [
 		var data = playingData[user.userId] || {};
 		data.token = randomString(16);
 		playingData[user.userId] = data;
-		if (handlerInput.requestEnvelope.request.intent.name == "AMAZON.PauseIntent")
+		if (handlerInput.requestEnvelope.request.intent && 
+			handlerInput.requestEnvelope.request.intent.name == "AMAZON.PauseIntent")
 			res = res.speak("Resumed.");
 
 		return new Promise((resolve, reject) => {
@@ -245,7 +246,8 @@ exports.requestHandlers = [
 		if (!data) return res.getResponse();
 		data.playingIndex++;
 		if (data.playingIndex >= data.files.length && !data.loop) {
-			if (handlerInput.requestEnvelope.request.intent.name == "AMAZON.NextIntent")
+			if (handlerInput.requestEnvelope.request.intent &&
+				handlerInput.requestEnvelope.request.intent.name == "AMAZON.NextIntent")
 				res = res.speak("Playlist ended");
 			return res.addAudioPlayerStopDirective().getResponse();
 		}
@@ -274,7 +276,8 @@ exports.requestHandlers = [
 		data.playingIndex--;
 		if (data.playingIndex < 0) {
 			if (!data.loop) {
-				if (handlerInput.requestEnvelope.request.intent.name == "AMAZON.NextIntent")
+				if (handlerInput.requestEnvelope.request.intent &&
+					handlerInput.requestEnvelope.request.intent.name == "AMAZON.NextIntent")
 					res = res.speak("It is first file");
 				return res.getResponse();
 			} else 

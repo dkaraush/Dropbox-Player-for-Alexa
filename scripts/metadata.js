@@ -22,7 +22,8 @@ module.exports = function (apikey) {
 				var tags = id3.read(buff) || {};
 				if (!tags.title && !tags.artist) {
 					filename = filename.replace(/_/g," ");
-					filename = filename.replace(/|\(.+\)|\'.+\'|\".+\"|[ ]{0,}\.mp3$|^[ ]{0,}/g,"");
+					filename = filename.replace(/\(.+\)|\'.+\'|\".+\"| {0,}\.mp3$/g,"");
+					filename = filename.replace(/ {0,}$/g,"");
 					var match = filename.split(/ - | — |-|—/g);
 					if (match.length == 2 || match.length == 2) {
 						tags.artist = match[0];
