@@ -384,7 +384,7 @@
 		document.querySelectorAll("pre").forEach(function (pre) {
 			var content = pre.innerHTML;
 			content = content.replace(/\"([^\"]{0,})\"/g,"<span class='string'>\"$1\"</span>");
-			content = content.replace(/if|while|for|function|else|do|import|at/g, "<span class='red'>$1</span>");
+			content = content.replace(/(at )/g, "<span class='red'>$1</span>");
 			content = content.replace(/"[^"]*"|(\d+)/g,function(m,p1){
 				if (m[0]=="\""&&m[m.length-1]=="\"")
 					return m;
