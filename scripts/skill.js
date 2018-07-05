@@ -71,6 +71,7 @@ exports.requestHandlers = [
 			return new Promise((resolve, reject) => {
 				getMetadata(user.userId, files[data.playingIndex], link).then(tags => {
 					res = CardMetadata(res, tags, files[data.playingIndex]);
+					data.token = randomString(16);
 					resolve(res.speak(`Playing ${data.files.length} file${data.files.length>1?"s":""}.`)
 							.addAudioPlayerPlayDirective('REPLACE_ALL', link, data.token, 0, null, AudioMetadata(tags, data.files[data.playingIndex]))
 							.getResponse());
@@ -148,6 +149,7 @@ exports.requestHandlers = [
 
 		return new Promise((resolve, reject) => {
 			getMetadata(user.userId, data.files[data.playingIndex], data.links[data.playingIndex]).then(tags => {
+				data.token = randomString(16);
 				resolve(res.addAudioPlayerPlayDirective('REPLACE_ALL', data.links[data.playingIndex], data.token, data.offset, null, AudioMetadata(tags, data.files[data.playingIndex]))
 					.getResponse());
 			})
@@ -264,6 +266,7 @@ exports.requestHandlers = [
 				if (handlerInput.requestEnvelope.request.intent &&
 					handlerInput.requestEnvelope.request.intent.name == "AMAZON.NextIntent")
 					res = CardMetadata(res, tags, data.files[data.playingIndex]);
+				data.token = randomString(16);
 				resolve(res.addAudioPlayerPlayDirective("REPLACE_ALL", data.links[data.playingIndex], data.token, 0, null, AudioMetadata(tags, data.files[data.playingIndex])).getResponse());
 			})
 		});
@@ -295,6 +298,7 @@ exports.requestHandlers = [
 				if (handlerInput.requestEnvelope.request.intent &&
 					handlerInput.requestEnvelope.request.intent.name == "AMAZON.PreviousIntent")
 					res = CardMetadata(res, tags, data.files[data.playingIndex]);
+				data.token = randomString(16);
 				resolve(res.addAudioPlayerPlayDirective("REPLACE_ALL", data.links[data.playingIndex], data.token, 0, null, AudioMetadata(tags, data.files[data.playingIndex])).getResponse());
 			})
 		});
