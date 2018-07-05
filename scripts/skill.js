@@ -203,7 +203,9 @@ exports.requestHandlers = [
 			data.links[data.nextIndex] = await dropbox_download_link(user.accessToken, data.files[data.nextIndex]);
 		return new Promise((resolve, reject) => {
 			getMetadata(user.userId, data.files[data.nextIndex], data.links[data.nextIndex]).then(tags => {
-				resolve(res.addAudioPlayerPlayDirective("ENQUEUE", data.links[data.nextIndex], data.token, 0, data.token, AudioMetadata(tags, data.files[data.nextIndex])).getResponse());
+				var wasToken = data.token;
+				data.token = randomString(16);
+				resolve(res.addAudioPlayerPlayDirective("ENQUEUE", data.links[data.nextIndex], data.token, 0, wasToken, AudioMetadata(tags, data.files[data.nextIndex])).getResponse());
 			});
 		});
 	}
