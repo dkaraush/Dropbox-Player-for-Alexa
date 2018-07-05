@@ -143,7 +143,7 @@ exports.requestHandlers = [
 		data.token = randomString(16);
 		playingData[user.userId] = data;
 		if (handlerInput.requestEnvelope.request.intent && 
-			handlerInput.requestEnvelope.request.intent.name == "AMAZON.PauseIntent")
+			handlerInput.requestEnvelope.request.intent.name == "AMAZON.ResumeIntent")
 			res = res.speak("Resumed.");
 
 		return new Promise((resolve, reject) => {
@@ -188,7 +188,7 @@ exports.requestHandlers = [
 		if (!data)
 			return res.getResponse();
 		data.nextIndex = data.playingIndex+1;
-		if (!data.loop && data.files.length <= data.nextIndex+1)
+		if (!data.loop && data.nextIndex >= data.files.length)
 			return res.getResponse();
 
 		if (data.nextIndex >= data.files.length) 
@@ -261,7 +261,9 @@ exports.requestHandlers = [
 		delete data.nextIndex;
 		return new Promise((resolve, reject) => {
 			getMetadata(user.userId, data.files[data.playingIndex], data.links[data.playingIndex]).then(tags => {
-				res = CardMetadata(res, tags, data.files[data.playingIndex]);
+				if (handlerInput.requestEnvelope.request.intent &&
+					handlerInput.requestEnvelope.request.intent.name == "AMAZON.NextIntent")
+					res = CardMetadata(res, tags, data.files[data.playingIndex]);
 				resolve(res.addAudioPlayerPlayDirective("REPLACE_ALL", data.links[data.playingIndex], data.token, 0, null, AudioMetadata(tags, data.files[data.playingIndex])).getResponse());
 			})
 		});
@@ -277,7 +279,7 @@ exports.requestHandlers = [
 		if (data.playingIndex < 0) {
 			if (!data.loop) {
 				if (handlerInput.requestEnvelope.request.intent &&
-					handlerInput.requestEnvelope.request.intent.name == "AMAZON.NextIntent")
+					handlerInput.requestEnvelope.request.intent.name == "AMAZON.PreviousIntent")
 					res = res.speak("It is first file");
 				return res.getResponse();
 			} else 
@@ -290,7 +292,9 @@ exports.requestHandlers = [
 		delete data.nextIndex;
 		return new Promise((resolve, reject) => {
 			getMetadata(user.userId, data.files[data.playingIndex], data.links[data.playingIndex]).then(tags => {
-				res = CardMetadata(res, tags, data.files[data.playingIndex]);
+				if (handlerInput.requestEnvelope.request.intent &&
+					handlerInput.requestEnvelope.request.intent.name == "AMAZON.PreviousIntent")
+					res = CardMetadata(res, tags, data.files[data.playingIndex]);
 				resolve(res.addAudioPlayerPlayDirective("REPLACE_ALL", data.links[data.playingIndex], data.token, 0, null, AudioMetadata(tags, data.files[data.playingIndex])).getResponse());
 			})
 		});
