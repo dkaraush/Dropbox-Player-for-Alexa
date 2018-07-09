@@ -1,6 +1,6 @@
 'use strict';
 
-const project_url = "https://codeload.github.com/dkaraush/Dropbox-Player-for-Alexa/zip/master";
+const project_url = "https://codeload.github.com/dkaraush/Dropbox-Player-for-Alexa/zip/dev";
 const { spawn } = require('child_process');
 const https = require("https");
 const fs = require('fs');

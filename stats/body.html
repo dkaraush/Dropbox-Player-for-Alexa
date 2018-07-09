@@ -298,6 +298,9 @@
 		.button:hover {
 			background: #0288D1;
 		}
+		.red {
+			color: #F44336;
+		}
 	</style>
 	<style type="text/css" id="nightcss">
 		html,head,body {
@@ -327,6 +330,9 @@
 		}
 		.button:hover {
 			background: #F57C00;
+		}
+		.red {
+			color: #EF5350;
 		}
 	</style>
 	<script type="text/javascript">
@@ -378,6 +384,7 @@
 		document.querySelectorAll("pre").forEach(function (pre) {
 			var content = pre.innerHTML;
 			content = content.replace(/\"([^\"]{0,})\"/g,"<span class='string'>\"$1\"</span>");
+			content = content.replace(/(at )/g, "<span class='red'>$1</span>");
 			content = content.replace(/"[^"]*"|(\d+)/g,function(m,p1){
 				if (m[0]=="\""&&m[m.length-1]=="\"")
 					return m;
