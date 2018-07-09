@@ -2,7 +2,7 @@ var id3 = require('node-id3');
 var http = require('http');
 var fs = require('fs');
 
-const lastfm_url = "http://ws.audioscrobbler.com/2.0/?method=track.getInfo&api_key={APIKEY}&artist={ARTIST}&track={TRACK}&format=json";
+const lastfm_url = "http://ws.audioscrobbler.com/2.0/?method=track.search&track={ARTIST} - {TRACK}&api_key={APIKEY}&format=json";
 
 var alreadyLoaded = {};
 module.exports = function (apikey) {
@@ -49,13 +49,16 @@ module.exports = function (apikey) {
 						req.on('data', chunk => chunks.push(chunk));
 						req.on('end', () => {
 							var resp = JSON.parse(chunks.join(''));
-							if (resp.error && !resp.track) {
+							if (resp.error || !resp.results || !resp.results.trackmatches || 
+								!resp.results.trackmatches.track || resp.results.trackmatches.track.length == 0) {
 								tags.imageURL = serverURL + "/assets/album.png";
 								alreadyLoaded[identificator] = tags;
 								resolve(tags);
-							} else if (resp.track && resp.track.album && resp.track.album.image) {
-								var images = resp.track.album.image.filter(i => i["#text"].length>0);
+							} else if (resp.results && resp.results.trackmatches && 
+									   resp.results.trackmatches.track && resp.results.trackmatches.track.length > 0) {
+								var images = resp.results.trackmatches.track[0].image.filter(i => i["#text"].length>0);
 								if (images.length == 0) {
+									tags.imageURL = serverURL + "/assets/album.png";
 									alreadyLoaded[identificator] = tags;
 									resolve(tags);
 									return;
@@ -67,6 +70,7 @@ module.exports = function (apikey) {
 									return ai < bi ? 1 : (ai > bi ? -1 : 0);
 								});
 								tags.imageURL = images[0]["#text"];
+								tags.subtitle = "Image loaded from Last.FM";
 								alreadyLoaded[identificator] = tags;
 								resolve(tags);
 							} else {
