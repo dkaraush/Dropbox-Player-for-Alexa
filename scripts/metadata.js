@@ -26,7 +26,7 @@ module.exports = function (apikey) {
 					filename = filename.replace(/\(.+\)|\'.+\'|\".+\"| {0,}\.mp3$/g,"");
 					filename = filename.replace(/ {0,}$/g,"");
 					var match = filename.split(/ - | — |-|—/g);
-					if (match.length == 2 || match.length == 2) {
+					if (match.length == 2) {
 						tags.artist = match[0];
 						tags.title = match[1];
 					}
