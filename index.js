@@ -88,7 +88,7 @@ async function start() {
 			states[newState] = {value: query.state, redirect: query.redirect_uri};
 			query.state = newState;
 			query.redirect_uri = serverURL + "/receive-auth/";
-			var newURL = dropboxapi + "?" + stringifyQuery(query);
+			var newURL = dropbox_auth + "?" + stringifyQuery(query);
 			res.statusCode = 200;
 			res.setHeader("Content-Type", "text/html");
 			res.end(redirectPage.replace(/\{URL\}/g, newURL));
