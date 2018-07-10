@@ -35,28 +35,41 @@
 			height: 10em;
 			background-image: url(/assets/redirect_bg.png);
 			background-size: cover;
+			background-position: center;
 			color: white;
+		}
+		#header div {
+			position: absolute;
+			top: 0;
+			left: 0;
+			bottom: 0;
+			right: 0;
+			background-color: rgba(0,0,0,0.4);
 		}
 		#header h1 {
 			position: absolute;
 			left: 0.5em;
 			bottom: 0.5em;
+			right: 0.5em;
+			vertical-align: bottom;
+			line-height: 100%;
 			font-weight: 300;
 		}
-		h1, h3 {
+		h1, p {
 			margin: 0;
 		}
-		h3 {
+		p {
+			margin-bottom: 0.1em;
 			font-weight: normal;
 		}
 		.button {
 			font-size: 1em;
 			padding: 0.5em 1em;
-			background: #43A047;
+			background: #03A9F4;
 			display: inline-block;
 			border-radius: 2px;
 			color: white;
-			box-shadow: 0 2px 2px rgba(0,0,0,0.1);
+			box-shadow: 0 2px 4px rgba(0,0,0,0.1);
 			cursor: pointer;
 			text-decoration: none;
 			transition: all 0.2s ease-in-out;
@@ -64,21 +77,32 @@
 			position: relative;
 		}
 		.eff {
-			background: rgba(255,255,255,0.1);
+			background: rgba(255,255,255,0.4);
 		}
 		.button:hover {
-			background: #388E3C;
+			background: #039BE5;
+		}
+		ul, li {
+			margin: 0.5em 0;
 		}
 	</style>
 </head>
 <body>
 	<div id="main">
 		<div id="header">
+			<div></div>
 			<h1>Dropbox linking</h1>
 		</div>
-		<h3>Sign in to your Dropbox account and link it to Alexa Skill.</h3>
+		<p>Sign in to your Dropbox account and link it to Alexa Skill.</p>
+		<p>We use your Dropbox account only when you use our skill. We use it to:</p>
+		<ul>
+			<li>search for all MP3 audio files <i>(Alexa, ask dropbox player to play all files)</i></li>
+			<li>search files by your query string <i>(Alexa, ask dropbox player to play {query} files)</i></li>
+			<li>download audio files to play them on your Alexa device</li>
+		</ul>
+		<p>Also, we try to get metadata from your audiofiles to properly display it on display or card. If there is no album image in audiofile, we try to search for it in Last.FM.</p>
 		<br>
-		<div href="{URL}" class="button">Sign in</div>
+		<div href="{URL}" class="button">SIGN IN</div>
 	</div>
 
 	<script type="text/javascript">
