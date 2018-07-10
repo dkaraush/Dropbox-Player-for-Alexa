@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta charset="utf-8">
+	<link href="https://fonts.googleapis.com/css?family=Roboto:300,400,700" rel="stylesheet">
+	<title>Dropbox Music Player</title>
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<style type="text/css">
+		html, head, body {
+			background: #F5F5F5;
+			margin: 0;
+			padding: 0;
+		}
+		#main {
+			background: white;
+			box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+			border-radius: 2px;
+			padding: 1em;
+			padding-top: 11em;
+			display: block;
+			width: 95%;
+			box-sizing: border-box;
+			max-width: 800px;
+			color: black;
+			font-family: 'Roboto';
+			margin: 1em auto;
+			position: relative;
+			overflow: hidden;
+		}
+		#header {
+			position: absolute;
+			top: 0;
+			right: 0;
+			left: 0;
+			height: 10em;
+			background-image: url(/assets/redirect_bg.png);
+			background-size: cover;
+			color: white;
+		}
+		#header h1 {
+			position: absolute;
+			left: 0.5em;
+			bottom: 0.5em;
+			font-weight: 300;
+		}
+		h1, h3 {
+			margin: 0;
+		}
+		h3 {
+			font-weight: normal;
+		}
+		.button {
+			font-size: 1em;
+			padding: 0.5em 1em;
+			background: #43A047;
+			display: inline-block;
+			border-radius: 2px;
+			color: white;
+			box-shadow: 0 2px 2px rgba(0,0,0,0.1);
+			cursor: pointer;
+			text-decoration: none;
+			transition: all 0.2s ease-in-out;
+			overflow: hidden;
+			position: relative;
+		}
+		.eff {
+			background: rgba(255,255,255,0.1);
+		}
+		.button:hover {
+			background: #388E3C;
+		}
+	</style>
+</head>
+<body>
+	<div id="main">
+		<div id="header">
+			<h1>Dropbox linking</h1>
+		</div>
+		<h3>Sign in to your Dropbox account and link it to Alexa Skill.</h3>
+		<br>
+		<div href="{URL}" class="button">Sign in</div>
+	</div>
+
+	<script type="text/javascript">
+		document.querySelectorAll("*[href]").forEach(function (div) {
+			div.addEventListener("click", function () {
+				setTimeout(function () {
+					var href = null;
+					for (var i = 0; i < div.attributes.length; ++i)
+						if (div.attributes[i].name == "href")
+							href = div.attributes[i].nodeValue;
+					window.open(href, "_self");
+				}, 500);
+			})
+		})
+	</script>
+
+	<!-- ripple button effect -->
+	<script type="text/javascript">
+		function init(div) {
+			div.style.userSelect="none";
+			div.style.webkitUserSelect="none";
+			div.style.mozUserSelect="none";
+			div.style.msUserSelect="none";
+			div.addEventListener("mousedown", function (e) {
+				if (e.button != 0) return;
+				var x=e.layerX, y=e.layerY, w=div.clientWidth, h=div.clientHeight;
+				var D1 = Math.sqrt(x*x + y*y);
+				var D2 = Math.sqrt((w-x)*(w-x) + y*y);
+				var D3 = Math.sqrt((w-x)*(w-x) + (h-y)*(h-y));
+				var D4 = Math.sqrt(x*x + (h-y)*(h-y));
+				var mD = Math.max(D1, D2, D3, D4);
+				var clickEff = document.createElement("div");
+				clickEff.style.position = "absolute";
+				clickEff.style.opacity = 1;
+				clickEff.className = "eff";
+				clickEff.style.borderRadius = "50%";
+				clickEff.style.transition = "all .5s ease-in-out";
+				clickEff.style.top = e.layerY+"px";
+				clickEff.style.left = e.layerX+"px";
+				clickEff.style.width = "0px";
+				clickEff.style.height = "0px";
+				clickEff.style.padding = "0px";
+				clickEff.style.margin = "0px";
+				clickEff.style.zIndex = 5;
+				div.appendChild(clickEff);
+				setTimeout(function () {
+					clickEff.style.width=clickEff.style.height=mD*2+"px";
+					clickEff.style.left=e.layerX-(mD)+"px";
+					clickEff.style.top=e.layerY-(mD)+"px";
+				}, 5);	
+			});
+			function mouseup(e) {
+				div.querySelectorAll(".eff").forEach(function (clickEff) {
+					clickEff.style.opacity = 0;
+					setTimeout(function () {
+						clickEff.remove();
+					},500);
+				});
+			}
+			div.addEventListener("mouseup", mouseup);
+			div.addEventListener("mouseover", mouseup);
+		}
+		init(document.querySelector(".button"));
+	</script>
+</body>
+</html>

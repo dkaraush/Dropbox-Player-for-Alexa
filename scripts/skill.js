@@ -552,7 +552,7 @@ function AudioMetadata(tags, file) {
 			contentDescription: "Dropbox Background",
 			sources: [
 				{
-					"url": serverURL + "/assets/bg-blur.png",
+					"url": serverURL + "/assets/player_bg.png",
 					"widthPixels": 1024,
 					"heightPixels": 640
 				}

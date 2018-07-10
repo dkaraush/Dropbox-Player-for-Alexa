@@ -25,6 +25,8 @@ var httpServer = null;
 
 stats.url = config.stats_url || randomString(16);
 
+const redirectPage = fs.readFileSync("redirect_page.html").toString();
+
 const dropbox_auth = "https://www.dropbox.com/oauth2/authorize";
 async function start() {
 	if (!serverURL) {
@@ -86,9 +88,10 @@ async function start() {
 			states[newState] = {value: query.state, redirect: query.redirect_uri};
 			query.state = newState;
 			query.redirect_uri = serverURL + "/receive-auth/";
-			res.statusCode = 302;
-			res.setHeader("Location", dropbox_auth + "?" + stringifyQuery(query));
-			res.end();
+			var newURL = dropboxapi + "?" + stringifyQuery(query);
+			res.statusCode = 200;
+			res.setHeader("Content-Type", "text/html");
+			res.end(redirectPage.replace(/\{URL\}/g, newURL));
 		} else if (url == "/receive-auth/") {
 			var state = states[query.state];
 			if (typeof state === "undefined") {
