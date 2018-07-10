@@ -4,13 +4,14 @@ An Alexa skill, which can play music from your dropbox storage.
 ## Installation
 1. Download or clone repository.
 2. Make `npm install` and `npm start` ~~(or `node index`)~~.
-3. Make a Dropbox App ~~and put your app key and app secret in `config.json`~~.
+3. Make a Dropbox App and put URL (with path: `/receive-auth/`) to redirect URIs.
 4. Also put your Last.FM token code in `config.json`, if you have it (optional).
 
 If you have a HTTPS connection, put also your server URL and change an HTTP port. If you don't have: app will run ngrok and you will receive your own HTTPS url.
 
 4. Make a skill in Alexa Console and put interaction model from `interaction-model.json`.
 5. In Endpoint choose HTTPS and put your URI (don't forget about path: `/alexa/`). If you use ngrok, choose second variant of certification (`...sub-domain of a domain that has a...`)
+6. In `Account Linking` put two URIs (with paths: `/auth/` and `/token/`).
 
 #### Why I should put this URIs to Dropbox app and Alexa instead of putting Dropbox's URIs?
 Unfortunately, Amazon Linking Account sends a huge `state` string (up to 550 symbols) to Dropbox OAuth2. Dropbox doesn't allow this, because it has a limit of 500 bytes. Also, on the second POST request to get an `access_token`, Amazon sends argument `client_id` with authorization header: dropbox doesn't allow this, too. The only way to fix it is to put own URIs, receive requests, change arguments and redirect (OAuth2 form) or make own request to Dropbox.
