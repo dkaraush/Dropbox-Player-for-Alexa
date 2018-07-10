@@ -4,7 +4,7 @@
 var fs = require("fs");
 var ngrok = require("ngrok");
 var Alexa = require("ask-sdk");
-var verifier = require("alexa-verifier-middleware");
+var verifier = require("alexa-verifier");
 var http = require("http");
 var https = require('https');
 require("colors");
@@ -55,7 +55,6 @@ async function start() {
 			url = url.substring(0, url.indexOf("?"));
 
 		if (url == "/alexa/" && req.method == "POST") {
-			console.dir(verifier(req));
 			var chunks = [];
 			req.on('data', chunk => chunks.push(chunk));
 			req.on('end', function () {
@@ -70,17 +69,26 @@ async function start() {
 				var playingDataWas = Object.assign({}, playingData[body.context.System.user.userId]);
 				skill.invoke(body)
 				  .then(function(responseBody) {
-					res.end(JSON.stringify(responseBody,"","\t"));
-					stats.reportAlexa(JSON.stringify(body,null,"\t"), 
-										  JSON.stringify(responseBody,null,"\t"), 
+				  	verifier(req.headers.signaturecertchainurl, req.headers.signature, chunks.join(""), function (err) {
+				  		var response = responseBody;
+				  		if (err) {
+				  			res.statusCode = 400;
+				  			response = {status: 'failure', reason: err};
+				  			res.end(JSON.stringify(response,null,'\t'));
+				  		} else 
+							res.end(JSON.stringify(responseBody,null,"\t"));
+
+						stats.reportAlexa(JSON.stringify(body,null,"\t"), 
+										  JSON.stringify(response,null,"\t"), 
 										  req.method+" "+req.url+" HTTP/1.1\n"+headersString(req.headers), 
-										  res._header, playingDataWas, Object.assign({}, playingData[body.context.System.user.userId]));
+										  res._header, playingDataWas, Object.assign({}, playingData[body.context.System.user.userId]));	
+					})
 				  })
 				  .catch(function(error) {
 					res.statusCode = 500;
-					res.end('{error: "error"}');
+					res.end('{status: "failure"}');
 					stats.reportAlexa(JSON.stringify(body,null,"\t"), 
-									  "{error: \"error\"}", 
+									  '{status: "failure"}', 
 									  req.method+" "+req.url+" HTTP/1.1\n"+headersString(req.headers), 
 									  res._header, playingDataWas, Object.assign({}, playingData[body.context.System.user.userId]));
 				  });
