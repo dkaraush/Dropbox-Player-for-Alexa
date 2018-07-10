@@ -374,7 +374,7 @@ exports.requestHandlers = [
 					var wasToken = data.token;
 					data.token = randomString(16);
 					var tags = await getMetadata();
-					res = res.addAudioPlayerPlayDirective("REPLACE_ENQUEUE", link, randomString(16), 0, data.token, AudioMetadata(tags, files[0]));
+					res = res.addAudioPlayerPlayDirective("REPLACE_ENQUEUED", link, randomString(16), 0, data.token, AudioMetadata(tags, files[0]));
 
 					var wasLength = data.files.length;
 					data.files = data.files.concat(files);
