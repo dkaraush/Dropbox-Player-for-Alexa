@@ -166,7 +166,7 @@ exports.requestHandlers = [
 	name: "AudioPlayer.PlaybackFinished",
 	_handle: async function(handlerInput, user, slots, res) {
 		var data = playingData[user.userId];
-		if (data && data.nextIndex) {
+		if (data && typeof data.nextIndex !== 'undefined') {
 			data.offset = 0;
 			data.playingIndex = data.nextIndex;
 			delete data.nextIndex;
@@ -552,7 +552,7 @@ function AudioMetadata(tags, file) {
 			contentDescription: "Dropbox Background",
 			sources: [
 				{
-					"url": serverURL + "/assets/bg-blur.png",
+					"url": serverURL + "/assets/player_bg.png",
 					"widthPixels": 1024,
 					"heightPixels": 640
 				}

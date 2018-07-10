@@ -1,5 +1,5 @@
 {
-    "name": "dropbox-amazon-player",
+	"name": "dropbox-amazon-player",
 	"version": "1.0.0",
 	"description": "An alexa skill, which can play music from dropbox",
 	"main": "index.js",
@@ -33,5 +33,8 @@
 		"ngrok": "^3.0.1",
 		"node-id3": "^0.1.5",
 		"unzip": "^0.1.11"
+	},
+	"dependencies": {
+		"alexa-verifier": "^2.0.1"
 	}
 }

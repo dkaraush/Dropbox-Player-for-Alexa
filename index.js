@@ -4,6 +4,7 @@
 var fs = require("fs");
 var ngrok = require("ngrok");
 var Alexa = require("ask-sdk");
+var verifier = require("alexa-verifier");
 var http = require("http");
 var https = require('https');
 require("colors");
@@ -25,9 +26,11 @@ var httpServer = null;
 
 stats.url = config.stats_url || randomString(16);
 
+const redirectPage = fs.readFileSync("redirect_page.html").toString();
+
 const dropbox_auth = "https://www.dropbox.com/oauth2/authorize";
 async function start() {
-	if (!serverURL) {
+	if (!serverURL || serverURL.length == 0) {
 		serverURL = await ngrok.connect(http_port);
 		console.log("ngrok started on " + serverURL.cyan.bold);
 	} else {
@@ -66,17 +69,26 @@ async function start() {
 				var playingDataWas = Object.assign({}, playingData[body.context.System.user.userId]);
 				skill.invoke(body)
 				  .then(function(responseBody) {
-					res.end(JSON.stringify(responseBody,"","\t"));
-					stats.reportAlexa(JSON.stringify(body,null,"\t"), 
-										  JSON.stringify(responseBody,null,"\t"), 
+				  	verifier(req.headers.signaturecertchainurl, req.headers.signature, chunks.join(""), function (err) {
+				  		var response = responseBody;
+				  		if (err) {
+				  			res.statusCode = 400;
+				  			response = {status: 'failure', reason: err};
+				  			res.end(JSON.stringify(response,null,'\t'));
+				  		} else 
+							res.end(JSON.stringify(responseBody,null,"\t"));
+
+						stats.reportAlexa(JSON.stringify(body,null,"\t"), 
+										  JSON.stringify(response,null,"\t"), 
 										  req.method+" "+req.url+" HTTP/1.1\n"+headersString(req.headers), 
-										  res._header, playingDataWas, Object.assign({}, playingData[body.context.System.user.userId]));
+										  res._header, playingDataWas, Object.assign({}, playingData[body.context.System.user.userId]));	
+					})
 				  })
 				  .catch(function(error) {
 					res.statusCode = 500;
-					res.end('{error: "error"}');
+					res.end('{status: "failure"}');
 					stats.reportAlexa(JSON.stringify(body,null,"\t"), 
-									  "{error: \"error\"}", 
+									  '{status: "failure"}', 
 									  req.method+" "+req.url+" HTTP/1.1\n"+headersString(req.headers), 
 									  res._header, playingDataWas, Object.assign({}, playingData[body.context.System.user.userId]));
 				  });
@@ -86,9 +98,10 @@ async function start() {
 			states[newState] = {value: query.state, redirect: query.redirect_uri};
 			query.state = newState;
 			query.redirect_uri = serverURL + "/receive-auth/";
-			res.statusCode = 302;
-			res.setHeader("Location", dropbox_auth + "?" + stringifyQuery(query));
-			res.end();
+			var newURL = dropbox_auth + "?" + stringifyQuery(query);
+			res.statusCode = 200;
+			res.setHeader("Content-Type", "text/html");
+			res.end(redirectPage.replace(/\{URL\}/g, newURL));
 		} else if (url == "/receive-auth/") {
 			var state = states[query.state];
 			if (typeof state === "undefined") {
