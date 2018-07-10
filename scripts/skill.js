@@ -166,7 +166,7 @@ exports.requestHandlers = [
 	name: "AudioPlayer.PlaybackFinished",
 	_handle: async function(handlerInput, user, slots, res) {
 		var data = playingData[user.userId];
-		if (data && data.nextIndex) {
+		if (data && typeof data.nextIndex !== 'undefined') {
 			data.offset = 0;
 			data.playingIndex = data.nextIndex;
 			delete data.nextIndex;
