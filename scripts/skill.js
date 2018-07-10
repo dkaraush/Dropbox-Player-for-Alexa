@@ -373,7 +373,7 @@ exports.requestHandlers = [
 					var link = await dropbox_download_link(user.accessToken, files[0]);
 					var wasToken = data.token;
 					data.token = randomString(16);
-					var tags = await getMetadata();
+					var tags = await getMetadata(user.userId, files[0], link);
 					res = res.addAudioPlayerPlayDirective("REPLACE_ENQUEUED", link, randomString(16), 0, data.token, AudioMetadata(tags, files[0]));
 
 					var wasLength = data.files.length;
