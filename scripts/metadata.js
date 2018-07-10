@@ -21,7 +21,7 @@ module.exports = function (apikey) {
 				}
 				var tags = id3.read(buff) || {};
 				if (!tags.title || !tags.artist ||
-					tags.title.length < 0 || tags.artist.length < 0) {
+					tags.title.length == 0 || tags.artist.length == 0) {
 					filename = filename.replace(/_/g," ");
 					filename = filename.replace(/\(.+\)|\'.+\'|\".+\"| {0,}\.mp3$/g,"");
 					filename = filename.replace(/ {0,}$/g,"");

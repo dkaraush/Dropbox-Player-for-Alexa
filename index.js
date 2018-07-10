@@ -4,6 +4,7 @@
 var fs = require("fs");
 var ngrok = require("ngrok");
 var Alexa = require("ask-sdk");
+var verifier = require("alexa-verifier-middleware");
 var http = require("http");
 var https = require('https');
 require("colors");
@@ -29,7 +30,7 @@ const redirectPage = fs.readFileSync("redirect_page.html").toString();
 
 const dropbox_auth = "https://www.dropbox.com/oauth2/authorize";
 async function start() {
-	if (!serverURL) {
+	if (!serverURL || serverURL.length == 0) {
 		serverURL = await ngrok.connect(http_port);
 		console.log("ngrok started on " + serverURL.cyan.bold);
 	} else {
@@ -54,6 +55,7 @@ async function start() {
 			url = url.substring(0, url.indexOf("?"));
 
 		if (url == "/alexa/" && req.method == "POST") {
+			console.dir(verifier(req));
 			var chunks = [];
 			req.on('data', chunk => chunks.push(chunk));
 			req.on('end', function () {
