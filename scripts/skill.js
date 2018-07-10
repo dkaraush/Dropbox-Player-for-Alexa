@@ -39,7 +39,7 @@ exports.requestHandlers = [
 			handlerInput.attributesManager.setSessionAttributes({from: "SearchIntent"});
 			var hasDisplay = typeof handlerInput.requestEnvelope.context.System.device.supportedInterfaces.Display !== "undefined";
 			res = res.speak(`There ${(files.length==1?"is":"are")} ${files.length} file${files.length==1?"":"s"}${hasDisplay?" on display":""}. Play ${files.length==1?"it":"them"}?`)
-					 .reprompt(`Play ${files.length==1?"it":"them"}?`);
+					 .reprompt(`${files.length} files. Play ${files.length==1?"it":"them"}?`);
 			if (hasDisplay)
 				res = res.addRenderTemplateDirective(makeList(files));
 			return res.getResponse();
@@ -100,7 +100,7 @@ exports.requestHandlers = [
 			handlerInput.attributesManager.setSessionAttributes({from: "PlayAllIntent"});
 			var hasDisplay = typeof handlerInput.requestEnvelope.context.System.device.supportedInterfaces.Display !== "undefined";
 			res = res.speak(`There ${files.length==1?"is":"are"} ${files.length} file${files.length==1?"":"s"}${hasDisplay?" on display":""}. Play ${files.length==1?"it":"them"}?`)
-					 .reprompt(`Play ${files.length==1?"it":"them"}?`)
+					 .reprompt(`${files.length} files. Play ${files.length==1?"it":"them"}?`)
 			if (hasDisplay)
 				res = res.addRenderTemplateDirective(makeList(files));
 			return res.getResponse();
@@ -348,7 +348,7 @@ exports.requestHandlers = [
 		}
 
 		if (files.length == 0) {
-			return res.speak("No files found. Try again").reprompt().getResponse();
+			return res.speak("No files found. Try again").reprompt("Try to push files again.").getResponse();
 		} else {
 			var data = playingData[user.userId];
 			if (!data) {
@@ -363,13 +363,24 @@ exports.requestHandlers = [
 				var hasDisplay = typeof handlerInput.requestEnvelope.context.System.device.supportedInterfaces.Display !== "undefined";
 				handlerInput.attributesManager.setSessionAttributes({from: "AddIntent"});
 				res = res.speak(`There ${files.length>1?"are":"is"} ${files.length} file${files.length>1?"s":""}. Play ${files.length>1?"them":"it"}?`)
-						 .reprompt(`Play ${files.length>1?"them":"it"}?`);
+						 .reprompt(`${files.length} files. Play ${files.length>1?"them":"it"}?`);
 				if (hasDisplay)
 					res.addRenderTemplateDirective(makeList(_files));
 				return res.getResponse();
 			} else {
-				data.files = data.files.concat(files);
-				data.links = data.links.concat(new Array(files.length));
+				if (data.nextIndex && data.loop && data.nextIndex == 0 && data.playingIndex == data.files.length - 1) {
+					// we have to replace enqueued 
+					var link = await dropbox_download_link(user.accessToken, files[0]);
+					var wasToken = data.token;
+					data.token = randomString(16);
+					var tags = await getMetadata();
+					res = res.addAudioPlayerPlayDirective("REPLACE_ENQUEUE", link, randomString(16), 0, data.token, AudioMetadata(tags, files[0]));
+
+					var wasLength = data.files.length;
+					data.files = data.files.concat(files);
+					data.links = data.links.concat(new Array(files.length));
+					data.links[wasLength] = link;
+				}
 				data.links.forEach((l, i) => {
 					if (typeof l === "undefined")
 						dropbox_download_link(user.accessToken, data.files[i]).then(link => data.links[i] = link);
