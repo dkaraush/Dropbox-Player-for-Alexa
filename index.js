@@ -9,6 +9,9 @@ var http = require("http");
 var https = require('https');
 require("colors");
 
+// EPROTO error fix
+require("tls").DEFAULT_ECDH_CURVE = "auto"
+
 require("./scripts/utils.js");
 
 global.config = 		loadJSONFile("config.json", {http_port: 8032, server_url: null, lastfm_api_key: null}, true);
