@@ -344,7 +344,7 @@ exports.requestHandlers = [
 				}
 			}
 			if (wasLength > 0 && files.length == 0)
-				return res.speak("This files are already in playlist.").getResponse();
+				return res.speak("These files are already in playlist.").getResponse();
 		}
 
 		if (files.length == 0) {

@@ -39,6 +39,7 @@
                         }
                     ],
                     "samples": [
+                        "to play {query} file",
                         "play {query} file",
                         "find {query} file",
                         "search for {query} file",
@@ -85,6 +86,10 @@
                     "name": "PlayAllIntent",
                     "slots": [],
                     "samples": [
+                        "ask dropbox player to play all",
+                        "ask dropbox player to play all files",
+                        "to play all files",
+                        "to play all",
                         "play all from storage",
                         "find all files",
                         "search for all file",
@@ -170,6 +175,50 @@
                         "default shuffle {bool}",
                         "normal shuffle {bool}"
                     ]
+                },
+                {
+                    "name": "AMAZON.MoreIntent",
+                    "samples": []
+                },
+                {
+                    "name": "AMAZON.NavigateHomeIntent",
+                    "samples": []
+                },
+                {
+                    "name": "AMAZON.NavigateSettingsIntent",
+                    "samples": []
+                },
+                {
+                    "name": "AMAZON.PageUpIntent",
+                    "samples": []
+                },
+                {
+                    "name": "AMAZON.PageDownIntent",
+                    "samples": []
+                },
+                {
+                    "name": "AMAZON.ScrollRightIntent",
+                    "samples": []
+                },
+                {
+                    "name": "AMAZON.ScrollDownIntent",
+                    "samples": []
+                },
+                {
+                    "name": "AMAZON.ScrollLeftIntent",
+                    "samples": []
+                },
+                {
+                    "name": "AMAZON.ScrollUpIntent",
+                    "samples": []
+                },
+                {
+                    "name": "AMAZON.ShuffleOffIntent",
+                    "samples": []
+                },
+                {
+                    "name": "AMAZON.ShuffleOnIntent",
+                    "samples": []
                 }
             ],
             "types": [
@@ -180,6 +229,7 @@
                             "name": {
                                 "value": "off",
                                 "synonyms": [
+                                    "zero",
                                     "no",
                                     "false"
                                 ]
@@ -189,6 +239,7 @@
                             "name": {
                                 "value": "on",
                                 "synonyms": [
+                                    "one",
                                     "true",
                                     "yes"
                                 ]
