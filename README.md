@@ -56,4 +56,4 @@ You can also do that from stats page (check logs for its URL).
 
 - Alexa, ask dropbox player to push mozart files
 - Alexa, ask dropbox player to add Radiohead
-- Alexa, ask dropbox player to append Limon Tree
+- Alexa, ask dropbox player to append Lemon Tree
