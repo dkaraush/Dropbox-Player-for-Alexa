@@ -49,8 +49,6 @@ global.dropbox_all = async function (accessToken) {
 	});
 }
 
-}
-
 global.dropbox_download_link = async function (accessToken, path) {
 	if (path[0] != "/") path = "/" + path;
 	return new Promise((resolve, reject) => {
