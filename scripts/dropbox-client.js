@@ -44,7 +44,8 @@ global.dropbox_all = async function (accessToken) {
 				console.log(err);
 				reject(err);
 			}
-			resolve(result.entries.filter(file => (file.metadata['.tag']=='file'&&["wav","mp3","aac","ogg","ts","tsv","tsa","m4a"]).indexOf(file.metadata.path_lower.substring(file.metadata.path_lower.lastIndexOf(".")+1)) >= 0));
+			console.log(result.entries)
+			resolve(result.entries.filter(file => (file['.tag']=='file'&&["wav","mp3","aac","ogg","ts","tsv","tsa","m4a"]).indexOf(file.path_lower.substring(file.path_lower.lastIndexOf(".")+1)) >= 0));
 		});
 	});
 }
