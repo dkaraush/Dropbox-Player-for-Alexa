@@ -511,11 +511,11 @@ function makeList(files) {
 			},
 			textContent: {
 				primaryText: {
-					text: "<font size='6'>"+file.metadata.name+"</font>",
+					text: "<font size='6'>"+(file.metadata ? file.metadata : file).name+"</font>",
 					type: "RichText"
 				},
 				secondaryText: {
-					text: file.metadata.path_display,
+					text: (file.metadata ? file.metadata : file).path_display,
 					type: "PlainText"
 				}
 			}
