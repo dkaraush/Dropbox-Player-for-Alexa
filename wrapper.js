@@ -75,8 +75,6 @@ function update(cb) {
 				  	console.log('unzipped');
 				  	console.log('installing npm packages');
 				  	var npm = spawn(/^win/.test(process.platform)?'npm.cmd':'npm', ["install"]);
-				  	npm.stdout.on('data', d => console.log(d.toString()));
-				  	npm.stderr.on('data', d => console.log(d.toString()));
 				  	npm.on('close', function (code) {
 				  		if (code != 0) {
 				  			console.log('something went wrong!');

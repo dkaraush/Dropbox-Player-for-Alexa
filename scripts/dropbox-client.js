@@ -21,7 +21,7 @@ global.dropbox_search = async function (accessToken, query) {
 				console.log(err);
 				reject(err);
 			}
-			resolve(result.matches.filter(file => (["wav","mp3"]).indexOf(file.metadata.path_lower.substring(file.metadata.path_lower.lastIndexOf(".")+1)) >= 0));
+			resolve(result.matches.filter(file => (["wav","mp3","aac","ogg","ts","tsv","tsa"]).indexOf(file.metadata.path_lower.substring(file.metadata.path_lower.lastIndexOf(".")+1)) >= 0));
 		});
 	});
 }

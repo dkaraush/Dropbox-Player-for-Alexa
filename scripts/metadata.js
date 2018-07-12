@@ -15,6 +15,11 @@ module.exports = function (apikey) {
 		},
 		load: function (identificator, filename, buff) {
 			return new Promise((resolve, reject) => {
+				if (filename.lastIndexOf('.') >= 0 && 
+					filename.substring(filename.lastIndexOf(".")+1) !== "mp3") {
+					resolve({imageURL: serverURL + "/assets/album.png"});
+					return;
+				}
 				if (alreadyLoaded[identificator]) {
 					resolve(alreadyLoaded[identificator]);
 					return;

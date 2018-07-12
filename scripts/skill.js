@@ -85,7 +85,7 @@ exports.requestHandlers = [
 {
 	name: "PlayAllIntent",
 	_handle: async function(handlerInput, user, slots, res) {
-		var files = await dropbox_search(user.accessToken, ".mp3");
+		var files = await dropbox_search(user.accessToken, "");
 
 		if (files.length == 0) {
 			return res.speak("There is no MP3 files in your dropbox.")
