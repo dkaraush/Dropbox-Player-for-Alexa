@@ -92,7 +92,7 @@ exports.requestHandlers = [
 					 .getResponse();
 		} else {
 			var data = playingData[user.userId] || {};
-			data.files = Array.from(files, o => o.metadata.path_display.substring(1));
+			data.files = Array.from(files, o => o.path_display.substring(1));
 			data.links = new Array(files.length)
 			data.loop = data.defaultLoop || false;
 			data.shuffle = data.defaultShuffle || false;
