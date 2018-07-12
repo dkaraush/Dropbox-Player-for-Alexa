@@ -48,7 +48,7 @@ global.dropbox_all = async function (accessToken) {
 			resolve(result.entries.filter(file => {
 				return file['.tag']=='file' && 
 					   ["wav","mp3","aac","ogg","ts","tsv","tsa","m4a"].indexOf(file.path_lower.substring(file.path_lower.lastIndexOf(".")+1)) >= 0
-			});
+			}));
 		});
 	});
 }
