@@ -26,6 +26,31 @@ global.dropbox_search = async function (accessToken, query) {
 	});
 }
 
+global.dropbox_all = async function (accessToken) {
+	return new Promise((resolve, reject) => {
+		dropboxV2Api.authenticate({token: accessToken})({
+			resource: 'files/list_folder',
+			parameters: {
+				path: "",
+				recursive: true,
+				include_media_info: false,
+				include_deleted: false,
+				include_has_explicit_shared_members: false,
+				include_mounted_folders: false
+			}
+		}, (err, result, response) => {
+			if (err) {
+				console.log("dropbox-client.js dropbox_all error:")
+				console.log(err);
+				reject(err);
+			}
+			resolve(result.entries.filter(file => (file.metadata['.tag']=='file'&&["wav","mp3","aac","ogg","ts","tsv","tsa","m4a"]).indexOf(file.metadata.path_lower.substring(file.metadata.path_lower.lastIndexOf(".")+1)) >= 0));
+		});
+	});
+}
+
+}
+
 global.dropbox_download_link = async function (accessToken, path) {
 	if (path[0] != "/") path = "/" + path;
 	return new Promise((resolve, reject) => {

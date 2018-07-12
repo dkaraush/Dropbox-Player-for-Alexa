@@ -25,7 +25,7 @@ exports.requestHandlers = [
 		var files = await dropbox_search(user.accessToken, query);
 
 		if (files.length == 0) {
-			return res.speak(`There is no music files in your dropbox with "${query}" name. Try again`)
+			return res.speak(`There is no audio files in your dropbox with "${query}" name. Try again`)
 					 .reprompt()
 					 .getResponse();
 		} else {
@@ -85,10 +85,10 @@ exports.requestHandlers = [
 {
 	name: "PlayAllIntent",
 	_handle: async function(handlerInput, user, slots, res) {
-		var files = await dropbox_search(user.accessToken, "");
+		var files = await dropbox_all(user.accessToken);
 
 		if (files.length == 0) {
-			return res.speak("There is no MP3 files in your dropbox.")
+			return res.speak("There is no audio files in your dropbox.")
 					 .getResponse();
 		} else {
 			var data = playingData[user.userId] || {};
