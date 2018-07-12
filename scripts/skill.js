@@ -496,7 +496,7 @@ function makeList(files) {
 		token: 'Files',	
 		title: "Dropbox files",
 		listItems: Array.from(files, (file, i) => {
-		var filename = file.metadata.path_display.substring(1); 
+		var filename = (file.metadata ? file.metadata : file).path_display.substring(1); 
 		return {
 			token: "item_"+(i+1),
 			image: {
