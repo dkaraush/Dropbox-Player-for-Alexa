@@ -100,8 +100,8 @@ exports.requestHandlers = [
 			playingData[user.userId] = data;
 			handlerInput.attributesManager.setSessionAttributes({from: "PlayAllIntent"});
 			var hasDisplay = typeof handlerInput.requestEnvelope.context.System.device.supportedInterfaces.Display !== "undefined";
-			res = res.speak(`There ${files.length==1?"is":"are"} ${files.length} file${files.length==1?"":"s"}${hasDisplay?" on display":""}. Play ${files.length==1?"it":"them"}?`)
-					 .reprompt(`${files.length} files. Play ${files.length==1?"it":"them"}?`)
+			res = res.speak(`I have found ${files.length} audio file${files.length==1?"":"s"}. Shall I play ${files.length==1?"it":"them"}?`)
+					 .reprompt(`Shall I play ${files.length} audio file${files.length==1?"":"s"}`);
 			if (hasDisplay)
 				res = res.addRenderTemplateDirective(makeList(files));
 			return res.getResponse();
