@@ -409,7 +409,7 @@ exports.requestHandlers = [
 	_handle(handlerInput, user, slots, res) {
 		var data = playingData[user.userId] || {};
 		console.log(slots.bool);
-		data.defaultLoop = slots.bool.value == "on";
+		data.defaultLoop = ["yes","on","true"].indexOf(slots.bool.value) >= 0;
 		playingData[user.userId] = data;
 		return res.speak(`Default loop set to ${data.defaultLoop?"on":"off"}.`).getResponse();
 	}
@@ -418,7 +418,7 @@ exports.requestHandlers = [
 	name: "SetShuffleDefaultIntent",
 	_handle(handlerInput, user, slots, res) {
 		var data = playingData[user.userId] || {};
-		data.defaultShuffle = slots.bool.value == "on";
+		data.defaultShuffle = ["yes","on","true"].indexOf(slots.bool.value) >= 0;
 		playingData[user.userId] = data;
 		return res.speak(`Default shuffle set to ${data.defaultShuffle?"on":"off"}.`).getResponse();
 	}
