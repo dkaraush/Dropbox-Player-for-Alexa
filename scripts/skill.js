@@ -408,6 +408,7 @@ exports.requestHandlers = [
 	name: "SetLoopDefaultIntent",
 	_handle(handlerInput, user, slots, res) {
 		var data = playingData[user.userId] || {};
+		console.log(slots.bool);
 		data.defaultLoop = slots.bool.value == "on";
 		playingData[user.userId] = data;
 		return res.speak(`Default loop set to ${data.defaultLoop?"on":"off"}.`).getResponse();
