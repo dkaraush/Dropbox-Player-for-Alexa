@@ -25,7 +25,7 @@ exports.requestHandlers = [
 		var files = await dropbox_search(user.accessToken, query);
 
 		if (files.length == 0) {
-			return res.speak(`There is no audio files in your dropbox with "${query}" name. Try again`)
+			return res.speak(`I did not find any audio containing ${query}. Please try again with another query.`)
 					 .reprompt()
 					 .getResponse();
 		} else {
@@ -38,8 +38,8 @@ exports.requestHandlers = [
 			playingData[user.userId] = data;
 			handlerInput.attributesManager.setSessionAttributes({from: "SearchIntent"});
 			var hasDisplay = typeof handlerInput.requestEnvelope.context.System.device.supportedInterfaces.Display !== "undefined";
-			res = res.speak(`There ${(files.length==1?"is":"are")} ${files.length} file${files.length==1?"":"s"}${hasDisplay?" on display":""}. Play ${files.length==1?"it":"them"}?`)
-					 .reprompt(`${files.length} files. Play ${files.length==1?"it":"them"}?`);
+			res = res.speak(`I have found ${files.length} audio file${files.length==1?"":"s"}. Shall I play ${files.length==1"it":"them"}?`)
+					 .reprompt(`Shall I play ${files.length} audio file${files.length==1?"":"s"}`);
 			if (hasDisplay)
 				res = res.addRenderTemplateDirective(makeList(files));
 			return res.getResponse();
@@ -61,6 +61,7 @@ exports.requestHandlers = [
 			data.offset = 0;
 			var link = await dropbox_download_link(user.accessToken, files[data.playingIndex]);
 			data.links[data.playingIndex] = link;
+			data.sfiles = shuffle(data.files.length);
 			playingData[user.userId] = data;
 			(function(user) {
 				var data = playingData[user.userId];
@@ -196,16 +197,18 @@ exports.requestHandlers = [
 		if (data.nextIndex >= data.files.length) 
 			data.nextIndex = 0;
 
-		if (data.shuffle)
-			data.nextIndex = Math.round(Math.random() * (data.files.length - 1));
+		var J = data.nextIndex;
+		if (data.shuffle) {
+			J = data.sfiles[data.nextIndex]
+		}
 
-		if (!data.links[data.nextIndex])
-			data.links[data.nextIndex] = await dropbox_download_link(user.accessToken, data.files[data.nextIndex]);
+		if (!data.links[J])
+			data.links[J] = await dropbox_download_link(user.accessToken, data.files[J]);
 		return new Promise((resolve, reject) => {
-			getMetadata(user.userId, data.files[data.nextIndex], data.links[data.nextIndex]).then(tags => {
+			getMetadata(user.userId, data.files[J], data.links[J]).then(tags => {
 				var wasToken = data.token;
 				data.token = randomString(16);
-				resolve(res.addAudioPlayerPlayDirective("ENQUEUE", data.links[data.nextIndex], data.token, 0, wasToken, AudioMetadata(tags, data.files[data.nextIndex])).getResponse());
+				resolve(res.addAudioPlayerPlayDirective("ENQUEUE", data.links[J], data.token, 0, wasToken, AudioMetadata(tags, data.files[J])).getResponse());
 			});
 		});
 	}
@@ -344,11 +347,11 @@ exports.requestHandlers = [
 				}
 			}
 			if (wasLength > 0 && files.length == 0)
-				return res.speak("These files are already in playlist.").getResponse();
+				return res.speak("These are already in the playlist.").getResponse();
 		}
 
 		if (files.length == 0) {
-			return res.speak("No files found. Try again").reprompt("Try to push files again.").getResponse();
+			return res.speak("I did not fine any matching audio. Please try again.").reprompt("Try to add files again.").getResponse();
 		} else {
 			var data = playingData[user.userId];
 			if (!data) {
@@ -362,8 +365,8 @@ exports.requestHandlers = [
 				playingData[user.userId] = data;
 				var hasDisplay = typeof handlerInput.requestEnvelope.context.System.device.supportedInterfaces.Display !== "undefined";
 				handlerInput.attributesManager.setSessionAttributes({from: "AddIntent"});
-				res = res.speak(`There ${files.length>1?"are":"is"} ${files.length} file${files.length>1?"s":""}. Play ${files.length>1?"them":"it"}?`)
-						 .reprompt(`${files.length} files. Play ${files.length>1?"them":"it"}?`);
+				res = res.speak(`There ${files.length>1?"are":"is"} ${files.length} file${files.length>1?"s":""}${hasDisplay?" on display":""}. Shall I play ${files.length>1?"them":"it"}?`)
+						 .reprompt(`${files.length} files. Shall I play ${files.length>1?"them":"it"}?`);
 				if (hasDisplay)
 					res.addRenderTemplateDirective(makeList(_files));
 				return res.getResponse();
@@ -385,7 +388,7 @@ exports.requestHandlers = [
 					if (typeof l === "undefined")
 						dropbox_download_link(user.accessToken, data.files[i]).then(link => data.links[i] = link);
 				});
-				return res.speak(`Added. Playlist contains now ${data.files.length} file${data.files.length>1?"s":""}.`).getResponse();
+				return res.speak(`Done. Thera are ${data.files.length} file${data.files.length>1?"s":""} in the playlist.`).getResponse();
 			}
 		}
 	}
@@ -393,14 +396,18 @@ exports.requestHandlers = [
 {
 	name: "AMAZON.ShuffleOnIntent",
 	_handle(handlerInput, user, slots, res) {
-		playingData[user.userId].shuffle = true;
+		if (playingData[user.userId]) {
+			playingData[user.userId].shuffle = true;
+			playingData[user.userId].sfiles = shuffle(playingData[user.userId].files.length);
+		}
 		return res.getResponse();
 	}
 },
 {
 	name: "AMAZON.ShuffleOffIntent",
 	_handle(handlerInput, user, slots, res) {
-		playingData[user.userId].shuffle = false;
+		if (playingData[user.userId])
+			playingData[user.userId].shuffle = false;
 		return res.getResponse();
 	}
 },
@@ -421,6 +428,42 @@ exports.requestHandlers = [
 		data.defaultShuffle = ["yes","on","true"].indexOf(slots.bool.value) >= 0;
 		playingData[user.userId] = data;
 		return res.speak(`Default shuffle set to ${data.defaultShuffle?"on":"off"}.`).getResponse();
+	}
+},
+{
+	name: "SetLoopDefaultOnIntent",
+	_handle(handlerInput, user, slots, res) {
+		var data = playingData[user.userId] || {};
+		data.defaultLoop = true;
+		playingData[user.userId] = data;
+		return res.speak(`Done.`).getResponse();
+	}
+},
+{
+	name: "SetShuffleDefaultOnIntent",
+	_handle(handlerInput, user, slots, res) {
+		var data = playingData[user.userId] || {};
+		data.defaultShuffle = true;
+		playingData[user.userId] = data;
+		return res.speak(`Done.`).getResponse();
+	}
+},
+{
+	name: "SetLoopDefaultOffIntent",
+	_handle(handlerInput, user, slots, res) {
+		var data = playingData[user.userId] || {};
+		data.defaultLoop = false;
+		playingData[user.userId] = data;
+		return res.speak(`Done.`).getResponse();
+	}
+},
+{
+	name: "SetShuffleDefaultOffIntent",
+	_handle(handlerInput, user, slots, res) {
+		var data = playingData[user.userId] || {};
+		data.defaultShuffle = false;
+		playingData[user.userId] = data;
+		return res.speak(`Done.`).getResponse();
 	}
 }
 ];
@@ -523,6 +566,17 @@ function makeList(files) {
 		}})
 	};
 	return r;
+}
+function shuffle(n) {
+	var a = Array.from({length: n}, (x,i) => i);
+    var j, x, i;
+    for (i = a.length - 1; i > 0; i--) {
+        j = Math.floor(Math.random() * (i + 1));
+        x = a[i];
+        a[i] = a[j];
+        a[j] = x;
+    }
+    return a;
 }
 
 

@@ -1,7 +1,7 @@
 {
     "interactionModel": {
         "languageModel": {
-            "invocationName": "dropbox player",
+            "invocationName": "cloud player",
             "intents": [
                 {
                     "name": "AMAZON.FallbackIntent",
@@ -157,6 +157,23 @@
                     ]
                 },
                 {
+                    "name": "SetLoopDefaultOnIntent",
+                    "samples": [
+                        "loop playback",
+                        "enable looping",
+                        "enable looping of audio played"
+                    ]
+                },
+                {
+                    "name": "SetLoopDefaultOffIntent",
+                    "samples": [
+                        "disable playback looping",
+                        "turn playback looping off",
+                        "turn looping off",
+                        "disable looping"
+                    ]
+                },
+                {
                     "name": "SetShuffleDefaultIntent",
                     "slots": [
                         {
@@ -174,6 +191,24 @@
                         "default shuffle to {bool}",
                         "default shuffle {bool}",
                         "normal shuffle {bool}"
+                    ]
+                },
+                {
+                    "name": "SetShuffleDefaultOnIntent",
+                    "samples": [
+                        "shuffle playback",
+                        "shuffle audio played",
+                        "enable shuffling",
+                        "enable shuffling playback"
+                    ]
+                },
+                {
+                    "name": "SetShuffleDefaultOffIntent",
+                    "samples": [
+                        "disable shuffling",
+                        "disable shuffled playback",
+                        "turn shuffling off",
+                        "turn shuffled playback off"
                     ]
                 },
                 {
