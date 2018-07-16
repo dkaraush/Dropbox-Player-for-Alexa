@@ -44,7 +44,6 @@ global.dropbox_all = async function (accessToken) {
 				console.log(err);
 				reject(err);
 			}
-			console.log(result.entries)
 			resolve(result.entries.filter(file => {
 				return file['.tag']=='file' && 
 					   ["wav","mp3","aac","ogg","ts","tsv","tsa","m4a"].indexOf(file.path_lower.substring(file.path_lower.lastIndexOf(".")+1)) >= 0
