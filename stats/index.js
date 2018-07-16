@@ -10,7 +10,7 @@ var rules = {
 
 const eventsPerPage = 10;
 var fields = {
-	"STATS_URL": () => exports.url,
+	"STATS_URL": () => serverURL + "/" + exports.url,
 	"CURRENT_USER_ID": query => query.id,
 	"CURRENT_USER_LAST_TEXT": query => dateDifferenceString(statistics[query.id].last_activity, Date.now()),
 	"CURRENT_USER_LAST_DATETIME": query => datetimeString(statistics[query.id].last_activity),
