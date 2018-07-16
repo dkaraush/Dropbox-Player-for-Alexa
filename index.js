@@ -25,7 +25,7 @@ var stats = require("./stats/index.js");
 
 var states = {};
 var skill;
-var httpServer = null;
+var server = null;
 
 stats.url = config.stats_url || randomString(16);
 
@@ -48,7 +48,8 @@ async function start() {
 	console.log();
 	console.log("You can view stats in "+(serverURL+"/"+stats.url).cyan.bold);
 
-	httpServer = http.createServer(function (req, res) {
+
+	function requestHandler(req, res) {
 		var url = req.url;
 		var raw_query = getRawQuery(req);
 		var query = parseQuery(raw_query);
@@ -169,8 +170,19 @@ async function start() {
 			res.statusCode = 404;
 			res.end();
 		}
-	});
-	httpServer.listen(http_port, function () {
+	}
+	
+	if (!config.credentials) {
+		server = http.createServer(requestHandler);
+	} else {
+		var credentials = {
+			key: fs.readFileSync(config.credentials.key),
+			cert: fs.readFileSync(config.credentials.cert)
+		};
+		server = https.createServer(credentials, requestHandler);
+	}
+
+	server.listen(http_port, function () {
 		console.log("HTTP server started on :" + http_port);
 	});
 }

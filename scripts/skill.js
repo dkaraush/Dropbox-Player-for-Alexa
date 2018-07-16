@@ -351,7 +351,7 @@ exports.requestHandlers = [
 		}
 
 		if (files.length == 0) {
-			return res.speak("I did not fine any matching audio. Please try again.").reprompt("Try to add files again.").getResponse();
+			return res.speak("I did not find any matching audio. Please try again.").reprompt("Try to add files again.").getResponse();
 		} else {
 			var data = playingData[user.userId];
 			if (!data) {

@@ -45,12 +45,12 @@
                         "search for {query} file",
                         "search for {query} files",
                         "find {query} files",
-                        "ask dropbox player to search {query}",
-                        "tell dropbpx player to search for {query}",
-                        "tell dropbox player to search {query}",
-                        "ask dropbox player to search for {query}",
-                        "ask dropbox player to play {query}",
-                        "tell dropbox player to play {query}",
+                        "ask cloud player to search {query}",
+                        "tell cloud player to search for {query}",
+                        "tell cloud player to search {query}",
+                        "ask cloud player to search for {query}",
+                        "ask cloud player to play {query}",
+                        "tell cloud player to play {query}",
                         "play {query}",
                         "search {query}",
                         "find {query}",
@@ -101,11 +101,19 @@
                 },
                 {
                     "name": "AMAZON.LoopOffIntent",
-                    "samples": []
+                    "samples": [
+                        "loop off",
+                        "disable looping",
+                        "stop looping"
+                    ]
                 },
                 {
                     "name": "AMAZON.LoopOnIntent",
-                    "samples": []
+                    "samples": [
+                        "loop on",
+                        "loop current song",
+                        "loop current songs"
+                    ]
                 },
                 {
                     "name": "AMAZON.NextIntent",
@@ -133,7 +141,7 @@
                         "append {query} files",
                         "append {query}",
                         "add {query} files",
-                        "add {query} ",
+                        "add {query}",
                         "add {query} to playlist"
                     ]
                 },
@@ -196,16 +204,18 @@
                 {
                     "name": "SetShuffleDefaultOnIntent",
                     "samples": [
-                        "shuffle playback",
-                        "shuffle audio played",
+                        "shuffle as default",
                         "enable shuffling",
-                        "enable shuffling playback"
+                        "enable shuffling playback",
+                        "always shuffle",
+                        "turn shuffling on",
+                        "turn shuffled playback off"
                     ]
                 },
                 {
                     "name": "SetShuffleDefaultOffIntent",
                     "samples": [
-                        "disable shuffling",
+                        "disable always shuffling",
                         "disable shuffled playback",
                         "turn shuffling off",
                         "turn shuffled playback off"
@@ -249,11 +259,17 @@
                 },
                 {
                     "name": "AMAZON.ShuffleOffIntent",
-                    "samples": []
+                    "samples": [
+                        "disable shuffling"
+                        "shuffle off"
+                    ]
                 },
                 {
                     "name": "AMAZON.ShuffleOnIntent",
-                    "samples": []
+                    "samples": [
+                        "shuffle playback",
+                        "shuffle one"
+                    ]
                 }
             ],
             "types": [
