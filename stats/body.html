@@ -353,21 +353,21 @@
 		}
 	</style>
 	<script type="text/javascript">
-		var night = (getCookie("darkmode")=="1");
+		var night = (getCookie("nightmode")=="1");
 		if (!night) {
 			for (var i = 0; i < document.styleSheets.length; ++i) {
 				if (document.styleSheets[i].ownerNode.id == "nightcss")
 					document.styleSheets[i].disabled = true;
 			}
 		}
-		setCookie("darkmode",night?"1":"0",{path:"{STATS_URL}/"});
+		setCookie("nightmode",night?"1":"0",{path:"{STATS_URL}/"});
 	</script>
 </head>
 <body>
 	{{CONTENT}}
 
 	<script type="text/javascript">
-		var night = (getCookie("darkmode")=="1");
+		var night = (getCookie("nightmode")=="1");
 		var nightswitcher = document.querySelector("#nightswitcher");
 		nightswitcher.addEventListener("click", function () {
 			night = !night;
@@ -376,7 +376,7 @@
 					document.styleSheets[i].disabled = !night;
 			}
 			nightswitcher.className = night?"enabled":"";
-			setCookie("darkmode",night?"1":"0",{path:"{STATS_URL}/"});
+			setCookie("nightmode",night?"1":"0",{path:"{STATS_URL}/"});
 		});
 		if (night)
 			nightswitcher.className = "enabled";
