@@ -108,6 +108,14 @@ exports.receive = function (req, res, url, query) {
 		res.setHeader("Location", serverURL + "/" + exports.url + "/");
 		res.end();
 		exitHandler({exit: true},null,17);
+	} else if (url == "change-password") {
+		res.statusCode = 302;
+		res.setHeader("Location", serverURL + "/" + exports.url + "/");
+		res.end();
+		if (!query.pass)
+			return;
+		config.password = query.pass;
+		saveJSONFile("config.json", config);
 	}
 
 	if (Object.keys(rules).indexOf(dirs[0]) == -1) {

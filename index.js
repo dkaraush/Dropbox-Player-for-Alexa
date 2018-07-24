@@ -14,7 +14,7 @@ require("tls").DEFAULT_ECDH_CURVE = "auto"
 
 require("./scripts/utils.js");
 
-global.config = 		loadJSONFile("config.json", {http_port: 8032, server_url: null, lastfm_api_key: null}, true);
+global.config = 		loadJSONFile("config.json", {http_port: 8032, server_url: null, lastfm_api_key: null, login: 'admin', password: 'admin'}, true);
 global.playingData = 	loadJSONFile("playing-data.json", {}, false);
 const http_port = 		config.http_port;
 global.serverURL = 		config.server_url;
@@ -47,6 +47,8 @@ async function start() {
 	console.log(" 3.".bold + ` Put this url (${(serverURL+"/receive-auth/").cyan.bold}) in your Dropbox App as an redirect URL.`);
 	console.log();
 	console.log("You can view stats in "+(serverURL+"/"+stats.url).cyan.bold);
+	console.log("Login".cyan + ": " + config.login);
+	console.log("Password".cyan + ": " + config.password);
 
 
 	function requestHandler(req, res) {
@@ -165,6 +167,27 @@ async function start() {
 			res.statusCode = 200;
 			fs.createReadStream("."+url).pipe(res);
 		} else if (url.split("/")[1] == stats.url) {
+			var auth = req.headers['authorization'];
+			if (!auth) {
+				res.statusCode = 401;
+				res.setHeader('WWW-Authenticate', 'Basic realm="Secure Area"');
+				res.end();
+				return;
+			}
+			var base64 = auth.split(' ')[1];
+			var buff = new Buffer(base64, 'base64');
+			var plainauth = buff.toString();
+
+			var login = plainauth.split(':')[0];
+			var password = plainauth.split(':')[1];
+
+			if (config.login != login || config.password != password) {
+				res.statusCode = 401;
+				res.setHeader('WWW-Authenticate', 'Basic realm="Secure Area"');
+				res.end();
+				return;
+			}
+
 			stats.receive(req, res, url, query);
 		} else {
 			res.statusCode = 404;
