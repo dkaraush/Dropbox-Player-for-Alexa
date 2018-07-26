@@ -1,6 +1,8 @@
 # Dropbox Alexa Player
 An Alexa skill, which can play music from your dropbox storage.
 
+**Available at: [Amazon Store](https://www.amazon.com/dp/B07FL7SDPZ)**
+
 ## Installation
 1. Download or clone repository.
 2. Make `npm install` and `npm start` ~~(or `node index`)~~.
@@ -31,7 +33,7 @@ You can also do that from stats page (check logs for its URL).
 - Alexa, ask dropbox player to search for mozart files
 - Alexa, tell dropbox player to play Radiohead files
 
-**Play all MP3 files**:
+**Play all audio files**:
 
 - Alexa, ask dropbox player to play all
 - Alexa, ask dropbox player to play all files
