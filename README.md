@@ -1,7 +1,7 @@
 # Dropbox Alexa Player
 An Alexa skill, which can play music from your dropbox storage.
 
-**Available at: [Amazon Store](https://www.amazon.com/dp/B07FL7SDPZ)** (Don't believe reviews, the app is working and was working all the time; These were accidents, that didn't depend on me, that's really insulting, especially knowing that this skill still used by people)
+**Available at: [Amazon Store](https://www.amazon.com/dp/B07FL7SDPZ)**
 
 ## Installation
 1. Download or clone repository.
